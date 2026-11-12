@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="theme-color" content="#26304A">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>网站收藏</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23262F45'/%3E%3Crect x='7' y='8' width='7' height='7' rx='2' fill='%23E7C58E'/%3E%3Crect x='18' y='8' width='7' height='7' rx='2' fill='%23A9B8DA'/%3E%3Crect x='7' y='18' width='7' height='7' rx='2' fill='%23A9B8DA'/%3E%3Crect x='18' y='18' width='7' height='7' rx='2' fill='%23E7C58E'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --ink:#282334;
+    --ink-2:#49364D;
+    --muted:#746279;
+    --paper:rgba(248,250,254,.84);
+    --edge:rgba(255,255,255,.62);
+    --lamp:#FF78B4;
+    --pink:#E83E87;
+    --pink-edge:rgba(255,91,160,.94);
+    --accent:#E83E87;
+    --accent-soft:rgba(255,91,160,.16);
+    --accent-edge:rgba(232,62,135,.25);
+    --accent-dark:#C52F70;
+    --accent-muted:#C24A83;
+    --accent-note:#92516F;
+    --gap:14px;
+    --radius:15px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:clamp(22px,5vh,58px) clamp(16px,4vw,40px);
+    background:#232B3F;
+    color:var(--ink);
+    font-family:"PingFang SC","HarmonyOS Sans SC","Source Han Sans SC","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+
+  /* ---------- 全屏插画背景 ---------- */
+  .scene{position:fixed;inset:0;z-index:-1;overflow:hidden;background:#26304A;}
+  .scene__img{
+    position:absolute;inset:0;
+    width:100%;height:100%;
+    object-fit:cover;
+    object-position:50% 52%;
+    filter:saturate(1.16);
+    animation:drift 2.4s cubic-bezier(.22,.61,.36,1) both;
+  }
+  @keyframes drift{
+    from{transform:scale(1.045);opacity:.55;}
+    to{transform:scale(1);opacity:1;}
+  }
+  /* 只压暗最亮处与四角，插画本身始终是主视觉 */
+  .scene__veil{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(118% 86% at 50% 44%, rgba(48,20,42,0) 26%, rgba(48,17,44,.34) 100%),
+      rgba(92,32,74,.09);
+  }
+  .scene__grain{
+    position:absolute;inset:0;
+    opacity:.14;mix-blend-mode:soft-light;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- 卡片集合 ---------- */
+  .shelf{width:100%;max-width:1120px;position:relative;}
+  .toolbar{
+    display:flex;justify-content:flex-end;align-items:center;gap:10px;
+    margin:0 0 20px;
+  }
+  .tool-wrap{position:relative;}
+  .tool-button{
+    width:44px;height:44px;display:grid;place-items:center;
+    border:1px solid rgba(255,255,255,.62);border-radius:13px;
+    color:#35263C;background:rgba(248,250,254,.88);
+    box-shadow:0 8px 20px -14px rgba(10,16,32,.6),0 1px 0 rgba(255,255,255,.7) inset;
+    cursor:pointer;transition:transform .2s ease,background-color .2s ease,color .2s ease;
+  }
+  .tool-button:hover{transform:translateY(-2px);color:var(--accent);background:rgba(255,255,255,.96);}
+  .tool-button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+  .tool-button:focus-visible,.page-arrow:focus-visible,.palette__option:focus-visible{outline:3px solid var(--lamp);outline-offset:3px;}
+  .palette{
+    position:absolute;z-index:5;top:calc(100% + 10px);right:0;width:190px;padding:12px;
+    border:1px solid rgba(255,255,255,.72);border-radius:14px;background:rgba(250,250,255,.96);
+    box-shadow:0 16px 38px rgba(14,18,34,.22);backdrop-filter:blur(14px);
+  }
+  .palette[hidden]{display:none;}
+  .palette__label{margin:0 0 9px;color:#746279;font-size:12px;font-weight:600;}
+  .palette__list{display:flex;gap:9px;}
+  .palette__option{
+    width:42px;height:42px;display:grid;place-items:center;border:2px solid transparent;border-radius:12px;
+    background:transparent;cursor:pointer;transition:transform .18s ease,border-color .18s ease;
+  }
+  .palette__option:hover{transform:translateY(-2px);}
+  .palette__option[aria-pressed="true"]{border-color:var(--swatch);}
+  .palette__swatch{width:25px;height:25px;border-radius:8px;background:var(--swatch);box-shadow:0 2px 7px color-mix(in srgb,var(--swatch),transparent 48%);}
+  .shelf__stage{position:relative;}
+  .pagination{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:20px;min-height:28px;color:rgba(255,255,255,.88);font-size:13px;text-shadow:0 1px 4px rgba(0,0,0,.48);}
+  .pagination[hidden]{display:none;}
+  .pagination__count{min-width:52px;text-align:center;}
+  .page-arrow{
+    position:absolute;z-index:2;top:50%;width:44px;height:44px;display:grid;place-items:center;
+    border:1px solid rgba(255,255,255,.68);border-radius:50%;color:#35263C;
+    background:rgba(248,250,254,.92);box-shadow:0 8px 20px -12px rgba(10,16,32,.6);
+    opacity:0;pointer-events:none;transform:translateY(-50%) scale(.92);
+    transition:opacity .2s ease,transform .2s ease,background-color .2s ease,color .2s ease;cursor:pointer;
+  }
+  .page-arrow--prev{left:-22px;}.page-arrow--next{right:-22px;}
+  .page-arrow:hover{color:var(--accent);background:#fff;}
+  .page-arrow svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+  .shelf__stage:hover .page-arrow,.shelf__stage:focus-within .page-arrow{opacity:1;pointer-events:auto;transform:translateY(-50%) scale(1);}
+  .page-arrow:disabled{opacity:0!important;pointer-events:none!important;}
+  .add-dialog{
+    width:min(440px,calc(100% - 32px));padding:0;border:1px solid rgba(255,255,255,.78);border-radius:18px;
+    color:var(--ink);background:rgba(250,250,255,.97);box-shadow:0 24px 80px rgba(12,14,29,.35);
+  }
+  .add-dialog::backdrop{background:rgba(19,19,35,.48);backdrop-filter:blur(4px);}
+  .add-form{padding:24px;}
+  .add-form__head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;}
+  .add-form__title{margin:0;font-size:19px;line-height:1.4;}
+  .add-form__hint{margin:5px 0 0;color:var(--muted);font-size:13px;}
+  .dialog-close{width:34px;height:34px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-size:23px;line-height:1;cursor:pointer;}
+  .dialog-close:hover{background:rgba(40,35,52,.08);color:var(--ink);}
+  .field{display:grid;gap:7px;margin-top:14px;}
+  .field label{font-size:13px;font-weight:600;color:#49364D;}
+  .field input{width:100%;height:42px;padding:0 12px;border:1px solid rgba(71,58,83,.19);border-radius:10px;background:#fff;color:var(--ink);font:inherit;outline:none;}
+  .field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent),transparent 84%);}
+  .form-error{min-height:19px;margin:8px 0 0;color:#B42354;font-size:12px;}
+  .form-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:12px;}
+  .form-actions button{height:40px;padding:0 15px;border-radius:10px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+  .form-cancel{border:1px solid rgba(71,58,83,.18);color:#49364D;background:#fff;}
+  .form-submit{border:1px solid var(--accent);color:#fff;background:var(--accent);}
+  .form-submit:hover{filter:brightness(.94);}
+  .grid{
+    list-style:none;margin:0;padding:0;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+  @media (max-width:359px){ .grid{grid-template-columns:1fr;} }
+  @media (min-width:720px){ .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;} }
+  @media (min-width:1080px){ .grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;} }
+
+  .card{
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr);
+    align-items:center;
+    gap:12px;
+    height:100%;
+    min-height:104px;
+    padding:16px 16px 16px 15px;
+    border-radius:var(--radius);
+    border:1px solid var(--edge);
+    background:var(--paper);
+    -webkit-backdrop-filter:blur(9px) saturate(118%);
+    backdrop-filter:blur(9px) saturate(118%);
+    box-shadow:0 12px 26px -16px rgba(10,16,32,.55), 0 1px 0 rgba(255,255,255,.55) inset;
+    text-decoration:none;
+    color:inherit;
+    transition:transform .24s cubic-bezier(.22,.61,.36,1),
+               background-color .24s ease,
+               color .24s ease,
+               box-shadow .24s ease,
+               border-color .24s ease;
+    animation:rise .68s cubic-bezier(.22,.61,.36,1) both;
+    animation-delay:calc(var(--i, 0) * 42ms);
+  }
+  @keyframes rise{
+    from{opacity:0;transform:translateY(10px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  @media (hover:hover){
+    .card:hover{
+      transform:translateY(-3px) scale(1.012);
+      border-color:rgba(255,255,255,.82);
+      box-shadow:0 16px 32px -18px rgba(10,16,32,.58), 0 1px 0 rgba(255,255,255,.72) inset;
+    }
+    .card:hover .card__icon{
+      background:var(--accent-soft);
+      border-color:var(--accent-edge);
+      color:var(--accent);
+      transform:rotate(-7deg) scale(1.1);
+      animation:icon-pop .42s cubic-bezier(.2,.8,.25,1.25);
+    }
+    .card:hover .card__name{color:var(--accent-dark);}
+    .card:hover .card__domain{color:var(--accent-muted);}
+    .card:hover .card__note{color:var(--accent-note);}
+  }
+  @keyframes icon-pop{
+    0%{transform:rotate(0) scale(.9);}
+    62%{transform:rotate(-10deg) scale(1.18);}
+    100%{transform:rotate(-7deg) scale(1.1);}
+  }
+  .card:active{transform:translateY(-1px) scale(.99);}
+  .card:focus-visible{
+    outline:3px solid var(--lamp);
+    outline-offset:3px;
+    border-color:rgba(255,120,180,.78);
+    box-shadow:0 0 0 4px rgba(255,118,180,.18);
+  }
+
+  .card__icon{
+    width:34px;height:34px;
+    border-radius:10px;
+    display:grid;place-items:center;
+    background:rgba(28,36,58,.062);
+    border:1px solid rgba(28,36,58,.07);
+    color:rgba(26,33,52,.86);
+    transition:background-color .24s ease,color .24s ease,border-color .24s ease,transform .24s cubic-bezier(.22,.61,.36,1);
+    flex:none;
+  }
+  .card__icon svg{width:19px;height:19px;display:block;fill:currentColor;}
+
+  .card__body{min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .card__name{
+    font-size:16px;
+    font-weight:600;
+    letter-spacing:.01em;
+    line-height:1.35;
+    color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .card__domain{
+    font-size:12px;
+    line-height:1.5;
+    color:var(--muted);
+    letter-spacing:.035em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .card__note{
+    margin-top:4px;
+    font-size:12.5px;
+    line-height:1.5;
+    color:var(--ink-2);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .scene__img,.card,.card:hover .card__icon{animation:none !important;}
+    .card,.card__icon{transition:none;}
+    .card:hover,.card:active{transform:none;}
+    .card:hover .card__icon{transform:none;}
+  }
+
+  /* ---------- 窄屏：图标移到上方，卡片变成紧凑小块 ---------- */
+  @media (max-width:639px){
+    .card{
+      grid-template-columns:1fr;
+      align-items:start;
+      gap:9px;
+      min-height:0;
+      padding:13px 13px 14px;
+      border-radius:13px;
+    }
+    .card__icon{width:30px;height:30px;border-radius:9px;}
+    .card__icon svg{width:17px;height:17px;}
+    .card__name{font-size:15px;}
+    .card__domain{font-size:11px;letter-spacing:.02em;}
+    .card__note{margin-top:3px;font-size:12px;}
+  }
+
+  /* 极窄屏退为单列，图标回到左侧，避免右侧大片留白 */
+  @media (max-width:359px){
+    .card{
+      grid-template-columns:auto minmax(0,1fr);
+      align-items:center;
+      gap:12px;
+      min-height:88px;
+      padding:14px;
+    }
+    .card__name{font-size:15.5px;}
+    .card__domain{font-size:11.5px;}
+  }
+  @media (hover:none){
+    .page-arrow{opacity:.82;pointer-events:auto;transform:translateY(-50%) scale(1);}
+    .page-arrow:disabled{opacity:0!important;pointer-events:none!important;}
+    .page-arrow--prev{left:4px;}.page-arrow--next{right:4px;}
+  }
+  @media (max-width:639px){
+    body{align-items:flex-start;padding-top:clamp(28px,8vh,56px);}
+    .toolbar{margin-bottom:16px;}
+    .tool-button{width:42px;height:42px;}
+    .pagination{margin-top:16px;}
+    .add-form{padding:20px;}
+    .page-arrow--prev{left:4px;}.page-arrow--next{right:4px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .tool-button,.palette__option,.page-arrow{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 全屏二次元插画背景 ===== -->
+<div class="scene" aria-hidden="true">
+  <img class="scene__img" fetchpriority="high" decoding="async" src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/Jlawbl2nlonSRtxUpEUc2AzfnDf" alt="">
+  <div class="scene__veil"></div>
+  <div class="scene__grain"></div>
+</div>
+
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+    <symbol id="i-bilibili" viewBox="0 0 24 24"><path fill="currentColor" d="M17.813 4.653h.854q2.266.08 3.773 1.574Q23.946 7.72 24 9.987v7.36q-.054 2.266-1.56 3.773c-1.506 1.507-2.262 1.524-3.773 1.56H5.333q-2.266-.054-3.773-1.56C.053 19.614.036 18.858 0 17.347v-7.36q.054-2.267 1.56-3.76t3.773-1.574h.774l-1.174-1.12a1.23 1.23 0 0 1-.373-.906q0-.534.373-.907l.027-.027q.4-.373.92-.373t.92.373L9.653 4.44q.107.106.187.213h4.267a.8.8 0 0 1 .16-.213l2.853-2.747q.4-.373.92-.373c.347 0 .662.151.929.4s.391.551.391.907q0 .532-.373.906zM5.333 7.24q-1.12.027-1.88.773q-.76.748-.786 1.894v7.52q.026 1.146.786 1.893t1.88.773h13.334q1.12-.026 1.88-.773t.786-1.893v-7.52q-.026-1.147-.786-1.894t-1.88-.773zM8 11.107q.56 0 .933.373q.375.374.4.96v1.173q-.025.586-.4.96q-.373.375-.933.374c-.56-.001-.684-.125-.933-.374q-.375-.373-.4-.96V12.44q0-.56.386-.947q.387-.386.947-.386m8 0q.56 0 .933.373q.375.374.4.96v1.173q-.025.586-.4.96q-.373.375-.933.374c-.56-.001-.684-.125-.933-.374q-.375-.373-.4-.96V12.44q.025-.586.4-.96q.373-.373.933-.373"/></symbol>
+  <symbol id="i-pixiv" viewBox="0 0 24 24"><path fill="currentColor" d="M4.94 0A4.953 4.953 0 0 0 0 4.94v14.12A4.953 4.953 0 0 0 4.94 24h14.12A4.953 4.953 0 0 0 24 19.06c-.014 1.355 0-14.12 0-14.12A4.953 4.953 0 0 0 19.06 0Zm1.783 5.465h.904a.37.37 0 0 1 .31.17l.752 1.17a6.172 6.172 0 0 1 10.01 4.834a6.172 6.172 0 0 1-9.394 5.265v2.016a.37.37 0 0 1-.37.367H6.724a.37.37 0 0 1-.37-.367V5.834a.37.37 0 0 1 .37-.37m5.804 2.951a3.222 3.222 0 1 0-.002 6.443a3.222 3.222 0 0 0 .002-6.443"/></symbol>
+  <symbol id="i-neteasecloudmusic" viewBox="0 0 24 24"><path fill="currentColor" d="M13.046 9.388a4 4 0 0 0-.66.19c-.809.312-1.447.991-1.666 1.775a2.3 2.3 0 0 0-.074.81a1.85 1.85 0 0 0 .764 1.35a1.483 1.483 0 0 0 2.01-.286c.406-.531.355-1.183.24-1.636c-.098-.387-.22-.816-.345-1.249a65 65 0 0 1-.269-.954m-.82 10.07c-3.984 0-7.224-3.24-7.224-7.223c0-.98.226-3.02 1.884-4.822A7.2 7.2 0 0 1 9.502 5.6a.792.792 0 1 1 .587 1.472a5.62 5.62 0 0 0-2.795 2.462a5.54 5.54 0 0 0-.707 2.7a5.645 5.645 0 0 0 5.638 5.638c1.844 0 3.627-.953 4.542-2.428c1.042-1.68.772-3.931-.627-5.238a3.3 3.3 0 0 0-1.437-.777c.172.589.334 1.18.494 1.772c.284 1.12.1 2.181-.519 2.989c-.39.51-.956.888-1.592 1.064a3.04 3.04 0 0 1-2.58-.44a3.45 3.45 0 0 1-1.44-2.514c-.04-.467.002-.93.128-1.376c.35-1.256 1.356-2.339 2.622-2.826a5.5 5.5 0 0 1 .823-.246l-.134-.505c-.37-1.371.25-2.579 1.547-3.007a2.4 2.4 0 0 1 1.025-.105c.792.09 1.476.592 1.709 1.023c.258.507-.096 1.153-.706 1.153a.8.8 0 0 1-.54-.213c-.088-.08-.163-.174-.259-.247a.83.83 0 0 0-.632-.166a.81.81 0 0 0-.634.551c-.056.191-.031.406.02.595c.07.256.159.597.217.82c1.11.098 2.162.54 2.97 1.296c1.974 1.844 2.35 4.886.892 7.233c-1.197 1.93-3.509 3.177-5.889 3.177zM0 12c0 6.627 5.373 12 12 12s12-5.373 12-12S18.627 0 12 0S0 5.373 0 12"/></symbol>
+  <symbol id="i-douban" viewBox="0 0 24 24"><path fill="currentColor" d="M.51 3.06h22.98V.755H.51zm20.976 2.537v9.608h-2.137l-1.669 5.76H24v2.28H0v-2.28h6.32l-1.67-5.76H2.515V5.597h18.972Zm-5.066 9.608H7.58l1.67 5.76h5.501zM18.367 7.9H5.634v5.025h12.733z"/></symbol>
+  <symbol id="i-sinaweibo" viewBox="0 0 24 24"><path fill="currentColor" d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02c-.259-2.609 2.759-5.047 6.74-5.441c3.979-.394 7.413 1.404 7.671 4.018c.259 2.6-2.759 5.049-6.737 5.439zM9.05 17.219c-.384.616-1.208.884-1.829.602c-.612-.279-.793-.991-.406-1.593c.379-.595 1.176-.861 1.793-.601c.622.263.82.972.442 1.592m1.27-1.627c-.141.237-.449.353-.689.253c-.236-.09-.313-.361-.177-.586c.138-.227.436-.346.672-.24c.239.09.315.36.18.601zm.176-2.719c-1.893-.493-4.033.45-4.857 2.118c-.836 1.704-.026 3.591 1.886 4.21c1.983.64 4.318-.341 5.132-2.179c.8-1.793-.201-3.642-2.161-4.149m7.563-1.224c-.346-.105-.57-.18-.405-.615c.375-.977.42-1.804 0-2.404c-.781-1.112-2.915-1.053-5.364-.03c0 0-.766.331-.571-.271c.376-1.217.315-2.224-.27-2.809c-1.338-1.337-4.869.045-7.888 3.08C1.309 10.87 0 13.273 0 15.348c0 3.981 5.099 6.395 10.086 6.395c6.536 0 10.888-3.801 10.888-6.82c0-1.822-1.547-2.854-2.915-3.284zm1.908-5.092a3.1 3.1 0 0 0-2.96-.962a.786.786 0 0 0-.616.932a.79.79 0 0 0 .932.602a1.51 1.51 0 0 1 1.442.465c.376.421.466.977.316 1.473a.786.786 0 0 0 .51.992a.813.813 0 0 0 .992-.512a3.11 3.11 0 0 0-.646-3.035zm2.418-2.195c-1.576-1.757-3.905-2.419-6.054-1.968a.91.91 0 0 0-.706 1.081a.91.91 0 0 0 1.082.707a4.5 4.5 0 0 1 4.296 1.383a4.53 4.53 0 0 1 .947 4.416a.91.91 0 0 0 .586 1.157c.479.165.991-.104 1.157-.586a6.39 6.39 0 0 0-1.338-6.235z"/></symbol>
+  <symbol id="i-zhihu" viewBox="0 0 24 24"><path fill="currentColor" d="M5.721 0C2.251 0 0 2.25 0 5.719V18.28C0 21.751 2.252 24 5.721 24h12.56C21.751 24 24 21.75 24 18.281V5.72C24 2.249 21.75 0 18.281 0zm1.964 4.078q-.408 1.096-.68 2.11h4.587c.545-.006.445 1.168.445 1.171H9.384a58 58 0 0 1-.112 3.797h2.712c.388.023.393 1.251.393 1.266H9.183a9.2 9.2 0 0 1-.408 2.102l.757-.604c.452.456 1.512 1.712 1.906 2.177c.473.681.063 2.081.063 2.081l-2.794-3.382c-.653 2.518-1.845 3.607-1.845 3.607c-.523.468-1.58.82-2.64.516c2.218-1.73 3.44-3.917 3.667-6.497H4.491c0-.015.197-1.243.806-1.266h2.71c.024-.32.086-3.254.086-3.797H6.598c-.136.406-.158.447-.268.753c-.594 1.095-1.603 1.122-1.907 1.155c.906-1.821 1.416-3.6 1.591-4.064c.425-1.124 1.671-1.125 1.671-1.125M13.078 6h6.377v11.33h-2.573l-2.184 1.373l-.401-1.373h-1.219zm1.313 1.219v8.86h.623l.263.937l1.455-.938h1.456v-8.86z"/></symbol>
+  <symbol id="i-zcool" viewBox="0 0 24 24"><path fill="currentColor" d="M15.467.438q-.144-.016-.2.12q-.87 2.096-3.067 3.157q-1.03.5-1.916.67q-1.574.304-2.762.631C3.442 6.135.197 9.2.01 13.59q-.138 3.23 1.657 5.85c2.826 4.127 8.452 5.384 12.722 2.732q3.421-2.126 4.359-6.186a.146.148 84 0 1 .084-.103c.282-.128.582-.226.857-.368q3.122-1.608 4.301-4.96a.181.183 13.8 0 0-.144-.24a.25.25 0 0 0-.127.011q-1.406.49-2.909.666a.03.03 0 0 1-.028-.047q2.968-4.024 2.799-9.112q-.004-.15-.148-.188a.175.17 28.9 0 0-.174.048q-3.21 3.437-7.715 4.185q-.116.018-.063-.086c.805-1.595.766-3.625.145-5.23a.2.2 0 0 0-.158-.123zm-2.151 13.195q.146-.02.053.209a6.6 6.6 0 0 1-1.258 2.003q-1.319 1.445-3.265 1.139a2.95 2.95 0 0 1-1.856-1.111a.09.09 0 0 1 .001-.109a.15.15 0 0 1 .109-.058c2.184-.205 4.073-1.122 6.092-2.033a.5.5 0 0 1 .124-.04m-12.231.618q.06.006.182.11c.739.624 1.679 1.212 2.644 1.296a.12.12 0 0 1 .095.171c-.556 1.113-1.661.87-2.283.025a4.2 4.2 0 0 1-.665-1.358q-.073-.255.027-.244"/></symbol>
+  <symbol id="i-figma" viewBox="0 0 24 24"><path fill="currentColor" d="M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491M12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441c0 2.503-2.047 4.539-4.563 4.539m-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019c1.705 0 3.093-1.376 3.093-3.068v-2.97zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h.098c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.49 4.49m-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019z"/></symbol>
+  <symbol id="i-notion" viewBox="0 0 24 24"><path fill="currentColor" d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326L17.86 1.968c-.42-.326-.981-.7-2.055-.607L3.01 2.295c-.466.046-.56.28-.374.466zm.793 3.08v13.904c0 .747.373 1.027 1.214.98l14.523-.84c.841-.046.935-.56.935-1.167V6.354c0-.606-.233-.933-.748-.887l-15.177.887c-.56.047-.747.327-.747.933zm14.337.745c.093.42 0 .84-.42.888l-.7.14v10.264c-.608.327-1.168.514-1.635.514c-.748 0-.935-.234-1.495-.933l-4.577-7.186v6.952L12.21 19s0 .84-1.168.84l-3.222.186c-.093-.186 0-.653.327-.746l.84-.233V9.854L7.822 9.76c-.094-.42.14-1.026.793-1.073l3.456-.233l4.764 7.279v-6.44l-1.215-.139c-.093-.514.28-.887.747-.933zM1.936 1.035l13.31-.98c1.634-.14 2.055-.047 3.082.7l4.249 2.986c.7.513.934.653.934 1.213v16.378c0 1.026-.373 1.634-1.68 1.726l-15.458.934c-.98.047-1.448-.093-1.962-.747l-3.129-4.06c-.56-.747-.793-1.306-.793-1.96V2.667c0-.839.374-1.54 1.447-1.632"/></symbol>
+  <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12c0 5.303 3.438 9.8 8.205 11.385c.6.113.82-.258.82-.577c0-.285-.01-1.04-.015-2.04c-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729c1.205.084 1.838 1.236 1.838 1.236c1.07 1.835 2.809 1.305 3.495.998c.108-.776.417-1.305.76-1.605c-2.665-.3-5.466-1.332-5.466-5.93c0-1.31.465-2.38 1.235-3.22c-.135-.303-.54-1.523.105-3.176c0 0 1.005-.322 3.3 1.23c.96-.267 1.98-.399 3-.405c1.02.006 2.04.138 3 .405c2.28-1.552 3.285-1.23 3.285-1.23c.645 1.653.24 2.873.12 3.176c.765.84 1.23 1.91 1.23 3.22c0 4.61-2.805 5.625-5.475 5.92c.42.36.81 1.096.81 2.22c0 1.606-.015 2.896-.015 3.286c0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></symbol>
+  <symbol id="i-steam" viewBox="0 0 24 24"><path fill="currentColor" d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658a3.4 3.4 0 0 1 1.912-.59q.094.001.188.006l2.861-4.142V8.91a4.53 4.53 0 0 1 4.524-4.524c2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911l.004.159a3.39 3.39 0 0 1-3.39 3.396a3.41 3.41 0 0 1-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0M7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25a2.551 2.551 0 0 0 3.337-3.324a2.547 2.547 0 0 0-3.255-1.413l1.523.63a1.878 1.878 0 0 1-1.445 3.467zm11.415-9.303a3.02 3.02 0 0 0-3.015-3.015a3.015 3.015 0 1 0 3.015 3.015m-5.273-.005a2.264 2.264 0 1 1 4.531 0a2.267 2.267 0 0 1-2.266 2.265a2.264 2.264 0 0 1-2.265-2.265"/></symbol>
+  <symbol id="i-youtube" viewBox="0 0 24 24"><path fill="currentColor" d="M23.498 6.186a3.02 3.02 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.02 3.02 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.02 3.02 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.02 3.02 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814M9.545 15.568V8.432L15.818 12z"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path fill="currentColor" d="M10.59 13.41a1.99 1.99 0 0 0 2.82 0l3-3a2 2 0 0 0-2.83-2.83l-1.72 1.72a1 1 0 1 1-1.41-1.41l1.72-1.72a4 4 0 0 1 5.66 5.66l-3 3a4 4 0 0 1-5.66 0a1 1 0 0 1 1.42-1.42ZM13.41 10.59a1.99 1.99 0 0 0-2.82 0l-3 3a2 2 0 0 0 2.83 2.83l1.72-1.72a1 1 0 1 1 1.41 1.41l-1.72 1.72a4 4 0 0 1-5.66-5.66l3-3a4 4 0 0 1 5.66 0a1 1 0 0 1-1.42 1.42Z"/></symbol>
+</svg>
+
+<!-- ===== 网站卡片集合 ===== -->
+<main class="shelf">
+  <div class="toolbar" aria-label="页面工具">
+    <div class="tool-wrap">
+      <button class="tool-button" id="theme-toggle" type="button" aria-label="选择悬停主题颜色" aria-expanded="false" aria-controls="theme-palette" title="主题颜色">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.3a2.2 2.2 0 0 0 1.6-3.7 1.1 1.1 0 0 1 .8-1.9H18a3 3 0 0 0 3-3c0-5.2-4-9.4-9-9.4Z"/><circle cx="7.8" cy="10" r="1"/><circle cx="11" cy="7" r="1"/><circle cx="15" cy="7.7" r="1"/></svg>
+      </button>
+      <div class="palette" id="theme-palette" hidden>
+        <p class="palette__label">悬停文字颜色</p>
+        <div class="palette__list" role="group" aria-label="选择悬停文字颜色">
+          <button class="palette__option" type="button" data-theme="pink" aria-label="粉色" aria-pressed="true" style="--swatch:#F04496"><span class="palette__swatch"></span></button>
+          <button class="palette__option" type="button" data-theme="blue" aria-label="蓝色" aria-pressed="false" style="--swatch:#2587F5"><span class="palette__swatch"></span></button>
+          <button class="palette__option" type="button" data-theme="green" aria-label="绿色" aria-pressed="false" style="--swatch:#19A974"><span class="palette__swatch"></span></button>
+        </div>
+      </div>
+    </div>
+    <button class="tool-button" id="add-site" type="button" aria-label="添加网站" title="添加网站">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </div>
+  <div class="shelf__stage" id="shelf-stage">
+  <button class="page-arrow page-arrow--prev" id="page-prev" type="button" aria-label="上一页" title="上一页">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+  </button>
+  <ul class="grid" id="site-grid" aria-live="polite">
+
+    <li><a class="card" style="--i:0" href="/nikowenku-archive/#/library">
+      <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-link" xlink:href="#i-link"/></svg></span>
+      <span class="card__body">
+        <span class="card__name">轻小说文库</span>
+        <span class="card__domain">nikowenku-archive</span>
+        <span class="card__note">浏览与阅读收藏作品</span>
+      </span>
+    </a></li>
+
+    <li><a class="card" style="--i:0" href="https://www.bilibili.com" target="_blank" rel="noopener noreferrer">
+      <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-bilibili" xlink:href="#i-bilibili"/></svg></span>
+      <span class="card__body">
+        <span class="card__name">哔哩哔哩</span>
+        <span class="card__domain">bilibili.com</span>
+        <span class="card__note">追番与弹幕视频</span>
+      </span>
+    </a></li>
+
+    <li><a class="card" style="--i:1" href="https://www.pixiv.net" target="_blank" rel="noopener noreferrer">
+      <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-pixiv" xlink:href="#i-pixiv"/></svg></span>
+      <span class="card__body">
+        <span class="card__name">Pixiv</span>
+        <span class="card__domain">pixiv.net</span>
+        <span class="card__note">插画收藏与画师关注</span>
+      </span>
+    </a></li>
+
+    <li><a class="card" style="--i:2" href="https://music.163.com" target="_blank" rel="noopener noreferrer">
+      <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-neteasecloudmusic" xlink:href="#i-neteasecloudmusic"/></svg></span>
+      <span class="card__body">
+        <span class="card__name">网易云音乐</span>
+        <span class="card__domain">music.163.com</span>
+        <span class="card__note">歌单与每日推荐</span>
+      </span>
+    </a></li>
+
+    <li><a class="card" style="--i:3" href="https://www.douban.com" target="_blank" rel="noopener noreferrer">
+      <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-douban" xlink:href="#i-douban"/></svg></span>
+      <span class="card__body">
+        <span class="card__name">豆瓣</span>
+        <span class="card__domain">douban.com</span>
+        <span class="card__note">影音书评分与标记</span>
+      </span>
+    </a></li>
+
+    <li><a class="card" style="--i:4" href="https://weibo.com" target="_blank" rel="noopener noreferrer">
+      <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-sinaweibo" xlink:href="#i-sinaweibo"/></svg></span>
+      <span class="card__body">
+        <span class="card__name">微博</span>
+        <span class="card__domain">weibo.com</span>
+        <span class="card__note">关注与热点动态</span>
+      </span>
+    </a></li>
+
+    <li><a class="card" style="--i:5" href="https://www.zhihu.com" target="_blank" rel="noopener noreferrer">
+      <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-zhihu" xlink:href="#i-zhihu"/></svg></span>
+      <span class="card__body">
+        <span class="card__name">知乎</span>
+        <span class="card__domain">zhihu.com</span>
+        <span class="card__note">问答与长文经验</span>
+      </span>
+    </a></li>
+
+    <li><a class="card" style="--i:6" href="https://www.zcool.com.cn" target="_blank" rel="noopener noreferrer">
+      <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-zcool" xlink:href="#i-zcool"/></svg></span>
+      <span class="card__body">
+        <span class="card__name">站酷</span>
+        <span class="card__domain">zcool.com.cn</span>
+        <span class="card__note">设计作品与灵感</span>
+      </span>
+    </a></li>
+
+    <li><a class="card" style="--i:7" href="https://www.figma.com" target="_blank" rel="noopener noreferrer">
+      <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-figma" xlink:href="#i-figma"/></svg></span>
+      <span class="card__body">
+        <span class="card__name">Figma</span>
+        <span class="card__domain">figma.com</span>
+        <span class="card__note">设计与多人协作</span>
+      </span>
+    </a></li>
+
+    <li><a class="card" style="--i:8" href="https://www.notion.so" target="_blank" rel="noopener noreferrer">
+      <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-notion" xlink:href="#i-notion"/></svg></span>
+      <span class="card__body">
+        <span class="card__name">Notion</span>
+        <span class="card__domain">notion.so</span>
+        <span class="card__note">笔记与资料整理</span>
+      </span>
+    </a></li>
+
+    <li><a class="card" style="--i:9" href="https://github.com" target="_blank" rel="noopener noreferrer">
+      <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-github" xlink:href="#i-github"/></svg></span>
+      <span class="card__body">
+        <span class="card__name">GitHub</span>
+        <span class="card__domain">github.com</span>
+        <span class="card__note">代码托管与开源项目</span>
+      </span>
+    </a></li>
+
+    <li><a class="card" style="--i:10" href="https://store.steampowered.com" target="_blank" rel="noopener noreferrer">
+      <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-steam" xlink:href="#i-steam"/></svg></span>
+      <span class="card__body">
+        <span class="card__name">Steam</span>
+        <span class="card__domain">store.steampowered.com</span>
+        <span class="card__note">游戏库与愿望单</span>
+      </span>
+    </a></li>
+
+    <li><a class="card" style="--i:11" href="https://www.youtube.com" target="_blank" rel="noopener noreferrer">
+      <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-youtube" xlink:href="#i-youtube"/></svg></span>
+      <span class="card__body">
+        <span class="card__name">YouTube</span>
+        <span class="card__domain">youtube.com</span>
+        <span class="card__note">频道与长视频</span>
+      </span>
+    </a></li>
+
+  </ul>
+  <button class="page-arrow page-arrow--next" id="page-next" type="button" aria-label="下一页" title="下一页">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+  </button>
+  </div>
+  <div class="pagination" id="pagination" hidden aria-label="卡片分页">
+    <span class="pagination__count" id="page-count" aria-live="polite">1 / 1</span>
+  </div>
+</main>
+
+<dialog class="add-dialog" id="add-dialog" aria-labelledby="add-title">
+  <form class="add-form" id="add-form">
+    <div class="add-form__head">
+      <div><h1 class="add-form__title" id="add-title">添加网站</h1><p class="add-form__hint">把常用网站收进你的收藏页</p></div>
+      <button class="dialog-close" type="button" id="dialog-close" aria-label="关闭">×</button>
+    </div>
+    <div class="field"><label for="site-name">网站名称</label><input id="site-name" name="name" maxlength="40" placeholder="例如：我的博客" required></div>
+    <div class="field"><label for="site-url">网站地址</label><input id="site-url" name="url" type="url" inputmode="url" placeholder="https://example.com" required></div>
+    <div class="field"><label for="site-note">一句简介 <span style="font-weight:400;color:#746279">（选填）</span></label><input id="site-note" name="note" maxlength="60" placeholder="记录这个网站有什么用"></div>
+    <p class="form-error" id="form-error" role="alert"></p>
+    <div class="form-actions"><button class="form-cancel" type="button" id="form-cancel">取消</button><button class="form-submit" type="submit">添加到收藏</button></div>
+  </form>
+</dialog>
+
+<script>
+  (() => {
+    const grid = document.querySelector('#site-grid');
+    const pagination = document.querySelector('#pagination');
+    const pageCount = document.querySelector('#page-count');
+    const prev = document.querySelector('#page-prev');
+    const next = document.querySelector('#page-next');
+    const themeToggle = document.querySelector('#theme-toggle');
+    const palette = document.querySelector('#theme-palette');
+    const dialog = document.querySelector('#add-dialog');
+    const form = document.querySelector('#add-form');
+    const error = document.querySelector('#form-error');
+    const themeStyles = {
+      pink: ['#F04496','rgba(240,68,150,.16)','rgba(213,43,120,.27)','#C52F70','#C24A83','#92516F'],
+      blue: ['#2587F5','rgba(37,135,245,.15)','rgba(24,109,211,.26)','#176BCB','#377CC2','#456C91'],
+      green: ['#19A974','rgba(25,169,116,.15)','rgba(17,132,87,.27)','#128055','#37886C','#4C7867']
+    };
+    const storage = {sites:'site-shelf.custom-sites.v1',theme:'site-shelf.theme.v1'};
+    const memoryStorage = new Map();
+    const storageGet = key => {
+      try { return localStorage.getItem(key); } catch { return memoryStorage.get(key) || null; }
+    };
+    const storageSet = (key, value) => {
+      memoryStorage.set(key, value);
+      try { localStorage.setItem(key, value); } catch {}
+    };
+    let currentPage = 0;
+    let pageSize = 12;
+
+    const setTheme = (name, persist = true) => {
+      const colors = themeStyles[name] || themeStyles.pink;
+      const root = document.documentElement;
+      ['--accent','--accent-soft','--accent-edge','--accent-dark','--accent-muted','--accent-note'].forEach((key, index) => root.style.setProperty(key, colors[index]));
+      document.querySelectorAll('.palette__option').forEach(option => option.setAttribute('aria-pressed', String(option.dataset.theme === name)));
+      if (persist) storageSet(storage.theme, name);
+    };
+
+    const addCard = (site, index) => {
+      const item = document.createElement('li');
+      const link = document.createElement('a');
+      link.className = 'card';
+      link.href = site.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.style.setProperty('--i', String(index % 12));
+      const icon = document.createElement('span');
+      icon.className = 'card__icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.innerHTML = '<svg viewBox="0 0 24 24"><use href="#i-link" xlink:href="#i-link"></use></svg>';
+      const body = document.createElement('span');
+      body.className = 'card__body';
+      const name = document.createElement('span');
+      name.className = 'card__name';
+      name.textContent = site.name;
+      const domain = document.createElement('span');
+      domain.className = 'card__domain';
+      domain.textContent = new URL(site.url).hostname.replace(/^www\./, '');
+      body.append(name, domain);
+      if (site.note) {
+        const note = document.createElement('span');
+        note.className = 'card__note';
+        note.textContent = site.note;
+        body.append(note);
+      }
+      link.append(icon, body);
+      item.append(link);
+      grid.append(item);
+    };
+
+    const layout = (reset = false) => {
+      if (reset) currentPage = 0;
+      const columns = getComputedStyle(grid).gridTemplateColumns.split(' ').length;
+      pageSize = columns * 3;
+      const items = [...grid.children];
+      const pages = Math.max(1, Math.ceil(items.length / pageSize));
+      currentPage = Math.min(currentPage, pages - 1);
+      items.forEach((item, index) => { item.hidden = index < currentPage * pageSize || index >= (currentPage + 1) * pageSize; });
+      pagination.hidden = pages < 2;
+      pageCount.textContent = `${currentPage + 1} / ${pages}`;
+      prev.disabled = currentPage === 0;
+      next.disabled = currentPage >= pages - 1;
+    };
+
+    try {
+      const savedSites = JSON.parse(storageGet(storage.sites) || '[]');
+      if (Array.isArray(savedSites)) savedSites.forEach((site, index) => {
+        try {
+          const url = new URL(site.url);
+          if (['http:', 'https:'].includes(url.protocol) && site.name) addCard({name:String(site.name),url:url.href,note:String(site.note || '')}, grid.children.length);
+        } catch {}
+      });
+      setTheme(storageGet(storage.theme) || 'pink', false);
+    } catch { setTheme('pink', false); }
+
+    themeToggle.addEventListener('click', () => {
+      const open = palette.hidden;
+      palette.hidden = !open;
+      themeToggle.setAttribute('aria-expanded', String(open));
+    });
+    palette.addEventListener('click', event => {
+      const option = event.target.closest('[data-theme]');
+      if (!option) return;
+      setTheme(option.dataset.theme);
+      palette.hidden = true;
+      themeToggle.setAttribute('aria-expanded', 'false');
+    });
+    document.addEventListener('click', event => {
+      if (!event.target.closest('.tool-wrap')) {
+        palette.hidden = true;
+        themeToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+    document.querySelector('#add-site').addEventListener('click', () => {
+      error.textContent = '';
+      dialog.showModal();
+      document.querySelector('#site-name').focus();
+    });
+    const closeDialog = () => dialog.close();
+    document.querySelector('#dialog-close').addEventListener('click', closeDialog);
+    document.querySelector('#form-cancel').addEventListener('click', closeDialog);
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const data = new FormData(form);
+      const name = String(data.get('name') || '').trim();
+      const inputUrl = String(data.get('url') || '').trim();
+      const note = String(data.get('note') || '').trim();
+      let url;
+      try { url = new URL(inputUrl); } catch { error.textContent = '请输入有效的网站地址'; return; }
+      if (!['http:', 'https:'].includes(url.protocol)) { error.textContent = '网站地址需要以 http:// 或 https:// 开头'; return; }
+      const site = {name,url:url.href,note};
+      const customSites = JSON.parse(storageGet(storage.sites) || '[]');
+      customSites.push(site);
+      storageSet(storage.sites, JSON.stringify(customSites));
+      addCard(site, grid.children.length);
+      layout(true);
+      form.reset();
+      closeDialog();
+    });
+    prev.addEventListener('click', () => { currentPage--; layout(); });
+    next.addEventListener('click', () => { currentPage++; layout(); });
+    window.addEventListener('resize', () => layout());
+    layout();
+  })();
+</script>
+
+</body>
+</html>
