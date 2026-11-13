@@ -2,9 +2,11 @@
 
 个人网站收藏首页，属于 `niko-archive` 组合站点。
 
-`index.html` 是独立静态页面，保留二次元背景、悬停文字主题、添加网站和自适应分页。轻小说书库默认排在第一张卡片，指向 `/nikowenku-archive/#/library`；第二张是星海余页（StarseaFolio），指向 `/StarseaFolio/`，用于 AI 辅助小说创作。
+`index.html` 是静态首页入口，保留二次元背景、悬停文字主题、添加网站和自适应分页。轻小说书库默认排在第一张卡片，指向 `/nikowenku-archive/#/library`；第二张是星海余页（StarseaFolio），指向 `/StarseaFolio/`，用于 AI 辅助小说创作。
 
-网站列表和主题选择存储在当前浏览器的 localStorage，不会修改仓库或同步给其他访客。直接打开 HTML 可以预览；书库链接需要通过主仓库的 Nginx 配置访问。背景插画目前沿用原 HTML 的远程图片地址。
+网站列表和主题选择存储在当前浏览器的 localStorage，不会修改仓库或同步给其他访客。双击本地 `index.html` 时自动进入正式站点 `https://111.229.32.85/`；浏览器禁止 `file://` 页面正常加载本应用的模块脚本和 SVG 图标，不能用文件地址预览源码。跳转只针对 `file:`，不携带本地路径、查询参数或片段，不读取或迁移浏览器配置。背景插画目前沿用原 HTML 的远程图片地址。
+
+本地只预览静态页面时，可在本目录用现有 HTTP 静态服务器提供文件，例如已安装 Python 的环境执行 `python -m http.server 8080 --bind 127.0.0.1`，然后访问 `http://127.0.0.1:8080/`。HTTP/HTTPS 预览地址不会跳转；本地聊天联调另需下文的同源接口代理，书库和写作入口需要主仓库的路由配置。
 
 静态首页不需要安装依赖或构建，部署时由 Nginx 在根路径提供 `index.html`、`chat.css`、`chat.js`、`chat-settings.js`、`browser-settings.js` 和 `select-menu.js`。首页包含 DeepSeek、ChatGPT 官网入口，顶部“对话”按钮展开时隐藏网站卡片和分页，对话面板占满下方空间；收起后恢复卡片。
 
