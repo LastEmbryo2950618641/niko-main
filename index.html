@@ -157,7 +157,7 @@
     grid-template-columns:repeat(var(--grid-columns),minmax(0,var(--card-size)));
     grid-auto-columns:var(--card-size);
     grid-template-rows:repeat(var(--grid-rows),minmax(0,1fr));
-    justify-content:space-between;
+    justify-content:center;
     gap:var(--grid-gap);
   }
   @media (min-width:720px){ .shelf__stage{--grid-gap:clamp(8px,1.6vh,14px);} }
@@ -639,10 +639,8 @@
       const gridStyle = getComputedStyle(grid);
       const gap = parseFloat(gridStyle.columnGap);
       const cardSize = parseFloat(gridStyle.gridAutoColumns);
-      const fittingColumns = Math.max(1, Math.floor(viewport.clientWidth / (cardSize + gap)));
-      // Use the full width and balance short lists, while keeping cards compact and square.
-      const requiredRows = Math.ceil(items.length / fittingColumns);
-      const columns = requiredRows > 0 && requiredRows <= 3 ? Math.ceil(items.length / requiredRows) : fittingColumns;
+      // Fill available columns; leave spare width outside the grid so both gaps stay equal.
+      const columns = Math.max(1, Math.floor(viewport.clientWidth / (cardSize + gap)));
       const rows = Math.max(1, Math.min(3, Math.ceil(items.length / columns)));
       stage.style.setProperty('--grid-columns', String(columns));
       stage.style.setProperty('--grid-rows', String(rows));
