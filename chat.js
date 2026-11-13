@@ -142,8 +142,8 @@ window.addEventListener('resize',()=>setHistoryOpen($('chat-history-toggle').get
 function renderMessages() {
   const follow=messagesNode.scrollHeight-messagesNode.scrollTop-messagesNode.clientHeight<70;
   if(!conversation.length) {
-    const empty=element('div','chat-empty'),crest=element('div','chat-empty__crest');crest.setAttribute('aria-hidden','true');
-    crest.append(createIcon('cat','chat-empty__cat'));empty.append(crest,element('strong',null,'想聊点什么？'));
+    const empty=element('div','chat-empty');
+    empty.append(element('strong',null,'想聊点什么？'));
     if(!settings.profiles.some(p=>p.hasApiKey)) {const button=element('button','chat-text-button');setIconLabel(button,'配置 API Key','key');button.type='button';button.addEventListener('click',()=>void openSettings());empty.append(button);}
     const accessories=element('div','chat-empty__accessories');accessories.setAttribute('aria-hidden','true');accessories.append(createIcon('paw-print'),createIcon('dress'),createIcon('heart'));empty.append(accessories);
     messagesNode.replaceChildren(empty);return;
