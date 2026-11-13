@@ -83,6 +83,11 @@ path.write_text(text.replace(marker, block + marker, 1))
 PY
 if ! nginx -t; then cp -a "$backup" "$nginx_conf"; exit 1; fi
 systemctl reload nginx
-curl -fsS "$origin/chat-api/health"
-echo
+healthy=0
+for _ in $(seq 1 20); do
+  if curl -fsS "$origin/chat-api/health" >/dev/null 2>&1; then healthy=1; break; fi
+  sleep 0.3
+done
+test "$healthy" -eq 1
+echo 'Public chat health: OK'
 echo 'Homepage chat deployed; existing book and writing services were not restarted.'
