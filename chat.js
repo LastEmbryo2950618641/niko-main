@@ -3,6 +3,7 @@ import {createChatTransition,showDialog,hideDialog} from './ui-motion.js?v=1';
 import {enhanceSelects} from './select-menu.js?v=5';
 import {createConversationArchive,conversationTitle} from './chat-conversations.js?v=1';
 import {createIcon,setIconLabel} from './site-icons.js?v=3';
+import {showError} from './error-dialog.js?v=1';
 const $=id=>document.getElementById(id);
 const chatPanel=$('chat-panel'),chatToggle=$('chat-toggle'),chatInput=$('chat-input'),messagesNode=$('chat-messages');
 const dialog=$('api-dialog'),profileSelect=$('api-profile'),keyInput=$('api-key');
@@ -16,7 +17,7 @@ catch(error) {const first=conversationArchive.create();archiveState={activeId:fi
 let activeConversation=archiveState.items.find(item=>item.id===archiveState.activeId),conversation=activeConversation.messages;
 chatInput.value=activeConversation.draft;
 const notice=message=>{$('chat-notice').textContent=message;};
-function apiStatus(message,error=false) {$('api-status').textContent=message;$('api-status').classList.toggle('is-error',error);}
+function apiStatus(message,error=false) {$('api-status').textContent=error?'':message;if(error)void showError(message);}
 async function api(path,{method='GET',body,signal}={}) {
   const response=await fetch('/chat-api/'+path,{method,credentials:'same-origin',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined,signal});
   if(!response.ok) { let message;try {message=(await response.json()).error;} catch {}throw new Error(message??`配置服务暂时不可用（HTTP ${response.status}）`); }
@@ -32,6 +33,7 @@ function updateSettings(next) {
   profileSelect.value=next.profiles.some(p=>p.id===previous)?previous:next.activeProfileId;
   selectMenus.refresh();
   renderMessages();
+  window.dispatchEvent(new Event('model-settings-changed'));
 }
 async function loadSettings() {
   if(ready) return;
@@ -94,7 +96,7 @@ $('api-delete').addEventListener('click',async()=>{
 $('chat-profile').addEventListener('change',async()=>{
   const select=$('chat-profile');select.disabled=true;
   try {updateSettings(await settingsStore.select(settings,select.value));notice('已切换');}
-  catch(error) {select.value=settings.activeProfileId;notice(error.message);}
+  catch(error) {select.value=settings.activeProfileId;void showError(error);}
   finally {select.disabled=Boolean(controller);}
 });
 $('api-reset').addEventListener('click',async()=>{
@@ -110,7 +112,7 @@ function persistConversation() {
 function flushConversation() {
   clearTimeout(historyTimer);activeConversation.messages=conversation;activeConversation.draft=chatInput.value;
   if(!archiveWritable)return;
-  try {conversationArchive.save(archiveState);}catch(error){notice(error.message);}
+  try {conversationArchive.save(archiveState);}catch(error){void showError(error);}
 }
 function element(tag,className,text) {const node=document.createElement(tag);if(className) node.className=className;if(text!==undefined) node.textContent=text;return node;}
 function renderConversations() {
@@ -154,7 +156,6 @@ function renderMessages() {
     const label=element('p','chat-message__label',message.role==='user'?'你':message.label??'助手');label.prepend(createIcon(message.role==='user'?'paw-print':'dress'));article.append(label);
     if(message.reasoning) {const details=element('details','chat-message__reasoning'),summary=element('summary',null,'思考过程');summary.prepend(createIcon('sparkle'));details.append(summary,element('p',null,message.reasoning));article.append(details);}
     article.append(element('div','chat-message__body',message.text||(message.status==='working'?'思考中…':message.status==='stopped'?'已停止':'未收到回复')));
-    if(message.error) article.append(element('p','chat-message__error',message.error));
     if(message.status==='stopped'&&message.text) article.append(element('p','chat-message__label','已停止 · 内容已保留'));
     fragment.append(article);
   }
@@ -171,9 +172,9 @@ chatToggle.addEventListener('click',()=>{
   const open=chatToggle.getAttribute('aria-expanded')!=='true';
   if(!open)setHistoryOpen(false);
   const finished=transitionChat(open);
-  if(open){renderMessages();resizeInput();void loadSettings().catch(error=>notice(error.message));void finished.then(()=>{if(chatToggle.getAttribute('aria-expanded')==='true'&&!chatPanel.closest('.shelf').dataset.switching)chatInput.focus({preventScroll:true});});}
+  if(open){renderMessages();resizeInput();void loadSettings().catch(error=>{void showError(error);});void finished.then(()=>{if(chatToggle.getAttribute('aria-expanded')==='true'&&!chatPanel.closest('.shelf').dataset.switching)chatInput.focus({preventScroll:true});});}
 });
-window.addEventListener('storage',event=>{if(event.key===settingsKey||event.key===null){settingsRevision++;ready=false;void loadSettings().then(()=>{if(controller)setRunning(true);}).catch(error=>notice(error.message));}});
+window.addEventListener('storage',event=>{if(event.key===settingsKey||event.key===null){settingsRevision++;ready=false;void loadSettings().then(()=>{if(controller)setRunning(true);}).catch(error=>{void showError(error);});}});
 $('chat-new').addEventListener('click',()=>{
   if(controller||preparing)return;
   if(!conversation.length&&!chatInput.value.trim()){if(matchMedia('(max-width:639px)').matches)setHistoryOpen(false);chatInput.focus();return;}
@@ -194,11 +195,11 @@ async function* eventsFrom(response) {
 $('chat-form').addEventListener('submit',async event=>{
   event.preventDefault();const text=chatInput.value.trim();if(!text||controller||preparing) return;
   preparing=true;$('chat-new').disabled=true;renderConversations();
-  try {await loadSettings();} catch(error) {notice(error.message);return;} finally {preparing=false;$('chat-new').disabled=Boolean(controller);renderConversations();}
+  try {await loadSettings();} catch(error) {void showError(error);return;} finally {preparing=false;$('chat-new').disabled=Boolean(controller);renderConversations();}
   const profile=settings.profiles.find(p=>p.id===settings.activeProfileId);
-  if(!profile?.hasApiKey) {notice('请先配置 API Key');void openSettings();return;}
+  if(!profile?.hasApiKey) {void showError('请先配置 API Key').then(()=>openSettings());return;}
   const history=conversation.filter(m=>m.text.trim()).map(m=>({role:m.role,content:m.text}));history.push({role:'user',content:text});
-  if(history.length>200||JSON.stringify(history).length>240000) {notice('对话已达上限，请新建对话。');return;}
+  if(history.length>200||JSON.stringify(history).length>240000) {void showError('对话已达上限，请新建对话。');return;}
   conversation.push({role:'user',text,status:'complete'});activeConversation.updatedAt=Date.now();
   const answer={role:'assistant',text:'',reasoning:'',status:'working',label:profile.name};conversation.push(answer);
   controller=new AbortController();setRunning(true);chatInput.value='';resizeInput();renderMessages();messagesNode.scrollTop=messagesNode.scrollHeight;persistConversation();notice('回复中…');
@@ -217,9 +218,9 @@ $('chat-form').addEventListener('submit',async event=>{
     answer.status='complete';notice('Enter 发送 · Shift + Enter 换行');
   } catch(error) {
     answer.status=controller.signal.aborted?'stopped':'error';
-    if(answer.status==='error') answer.error=error.message;
-    notice(answer.status==='stopped'?'已停止':'回复失败，请检查配置。');
+    if(answer.status==='error'){answer.error=error.message;void showError(error);}
+    notice(answer.status==='stopped'?'已停止':'Enter 发送 · Shift + Enter 换行');
   } finally {controller=undefined;setRunning(false);queueRender();chatInput.focus();}
 });
 window.addEventListener('pagehide',()=>{controller?.abort();flushConversation();});
-setIconLabel($('api-reset'),'重置本地配置','trash');renderMessages();renderConversations();if(archiveError)notice(archiveError);
+setIconLabel($('api-reset'),'重置本地配置','trash');renderMessages();renderConversations();if(archiveError)void showError(archiveError);

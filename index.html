@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>网站收藏</title>
 <link rel="stylesheet" href="/chat.css?v=8">
+<link rel="stylesheet" href="/add-site.css?v=1">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23262F45'/%3E%3Crect x='7' y='8' width='7' height='7' rx='2' fill='%23E7C58E'/%3E%3Crect x='18' y='8' width='7' height='7' rx='2' fill='%23A9B8DA'/%3E%3Crect x='7' y='18' width='7' height='7' rx='2' fill='%23A9B8DA'/%3E%3Crect x='18' y='18' width='7' height='7' rx='2' fill='%23E7C58E'/%3E%3C/svg%3E">
 <style>
   :root{
@@ -145,7 +146,6 @@
   .field label{font-size:13px;font-weight:600;color:#49364D;}
   .field input{width:100%;height:42px;padding:0 12px;border:1px solid rgba(71,58,83,.19);border-radius:10px;background:#fff;color:var(--ink);font:inherit;outline:none;}
   .field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent),transparent 84%);}
-  .form-error{min-height:19px;margin:8px 0 0;color:#B42354;font-size:12px;}
   .form-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:12px;}
   .form-actions button{height:40px;padding:0 15px;border-radius:10px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;}
   .form-cancel{border:1px solid rgba(71,58,83,.18);color:#49364D;background:#fff;}
@@ -324,6 +324,7 @@
 </style>
 <link rel="stylesheet" href="/motion.css?v=4">
 <link rel="stylesheet" href="/ornaments.css?v=5">
+<link rel="stylesheet" href="/recycle-bin.css?v=1">
 </head>
 <body>
 
@@ -512,22 +513,49 @@
   </div>
 </main>
 
+<button class="tool-button" id="recycle-bin" type="button" title="回收站 · 拖入网站卡片" aria-label="回收站" aria-haspopup="dialog">
+  <svg class="site-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=4#trash"/></svg>
+  <span class="recycle-count" id="recycle-count" hidden>0</span><span class="recycle-drop-hint" aria-hidden="true">拖到这里移入回收站</span>
+</button>
+<dialog class="add-dialog recycle-dialog" id="recycle-dialog" aria-labelledby="recycle-title">
+  <div class="add-form__head"><div class="dialog-heading"><svg class="site-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=4#trash"/></svg><h2 class="add-form__title" id="recycle-title">回收站</h2></div><button class="dialog-close" id="recycle-close" type="button" aria-label="关闭回收站">×</button></div>
+  <p class="recycle-total" id="recycle-total"></p><ul class="recycle-list" id="recycle-list"></ul>
+  <div class="recycle-empty" id="recycle-empty"><svg class="site-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=4#trash"/></svg>回收站为空</div>
+</dialog>
+<dialog class="add-dialog recycle-confirm" id="recycle-confirm" aria-labelledby="recycle-confirm-message" aria-describedby="recycle-confirm-note">
+  <h2 id="recycle-confirm-message">彻底删除网站？</h2><p id="recycle-confirm-note">删除后无法恢复。</p>
+  <div class="form-actions"><button class="form-cancel" type="button" id="recycle-confirm-cancel">取消</button><button class="form-submit" type="button" id="recycle-confirm-delete">彻底删除</button></div>
+</dialog>
+
 <dialog class="add-dialog" id="add-dialog" aria-labelledby="add-title">
-  <form class="add-form" id="add-form">
+  <form class="add-form" id="add-form" novalidate>
     <div class="add-form__head">
       <div class="dialog-heading"><svg class="site-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=3#ribbon"/></svg><h1 class="add-form__title" id="add-title">添加网站</h1></div>
       <button class="dialog-close" type="button" id="dialog-close" aria-label="关闭">×</button>
     </div>
-    <div class="field"><label for="site-name">名称</label><input id="site-name" name="name" maxlength="40" placeholder="如：我的博客" required></div>
+    <div class="site-mode-row">
+      <div class="site-modes" id="site-mode-switch" role="tablist" aria-label="添加方式">
+        <button id="site-mode-ai" type="button" role="tab" aria-selected="false" aria-controls="site-add-panel" tabindex="-1" disabled title="请先配置模型"><svg class="site-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=4#magic-wand"/></svg><span>AI探索</span></button>
+        <button id="site-mode-manual" type="button" role="tab" aria-selected="true" aria-controls="site-add-panel"><svg class="site-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=4#pencil-simple"/></svg><span>直接输入</span></button>
+      </div>
+      <button class="site-configure" id="site-configure-model" type="button"><svg class="site-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=4#key"/></svg><span>配置模型</span></button>
+    </div>
+    <div id="site-add-panel" role="tabpanel" aria-labelledby="site-mode-manual">
+    <div class="field" id="site-name-field"><label for="site-name">名称</label><input id="site-name" name="name" maxlength="40" placeholder="如：我的博客" required></div>
     <div class="field"><label for="site-url">网址</label><input id="site-url" name="url" type="url" inputmode="url" placeholder="https://example.com" required></div>
-    <div class="field"><label for="site-note">简介 <span style="font-weight:400;color:#746279">（选填）</span></label><input id="site-note" name="note" maxlength="60"></div>
-    <p class="form-error" id="form-error" role="alert"></p>
-    <div class="form-actions"><button class="form-cancel" type="button" id="form-cancel"><svg class="site-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=3#x"/></svg><span>取消</span></button><button class="form-submit" type="submit"><svg class="site-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=3#plus"/></svg><span>添加</span></button></div>
+    <div class="site-explore-actions" id="site-explore-actions" hidden><span class="site-model-name" id="site-model-name"></span><button id="site-explore" type="button"><svg class="site-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=4#magic-wand"/></svg><span>生成预览</span></button></div>
+    <section class="site-preview" id="site-preview" hidden aria-label="网站预览">
+      <div class="site-preview__head"><span>预览</span><button id="site-preview-edit" type="button"><svg class="site-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=4#pencil-simple"/></svg><span>修改</span></button></div>
+      <div class="site-preview__card"><svg class="site-icon" id="site-preview-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=5#bookmark-simple"/></svg><div class="site-preview__body"><strong id="site-preview-name"></strong><span class="site-preview__url" id="site-preview-url"></span><p id="site-preview-note"></p></div></div>
+    </section>
+    <div class="field" id="site-note-field"><label for="site-note">简介 <span style="font-weight:400;color:#746279">（选填）</span></label><input id="site-note" name="note" maxlength="60"></div>
+    </div>
+    <div class="form-actions"><button class="form-cancel" type="button" id="form-cancel"><svg class="site-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=3#x"/></svg><span>取消</span></button><button class="form-submit" id="site-submit" type="submit"><svg class="site-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=3#plus"/></svg><span>添加</span></button></div>
   </form>
 </dialog>
 
 <dialog class="add-dialog api-dialog" id="api-dialog" aria-labelledby="api-title">
-  <form class="api-form" id="api-form">
+  <form class="api-form" id="api-form" novalidate>
     <div class="add-form__head"><div class="dialog-heading"><svg class="site-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=3#dress"/></svg><h1 class="add-form__title" id="api-title">API 配置</h1></div><button class="dialog-close" id="api-close" type="button" aria-label="关闭 API 配置">×</button></div>
     <div class="field"><label for="api-profile">配置</label><select id="api-profile"><option value="__new">＋ 新配置</option><option value="deepseek" selected>DeepSeek</option></select></div>
     <div id="api-custom-fields" hidden>
@@ -542,16 +570,26 @@
     <div class="api-footer"><button class="chat-text-button api-delete" id="api-delete" type="button">清除 Key</button><button class="chat-text-button api-delete" id="api-reset" type="button" hidden>重置本地配置</button><button class="form-cancel" id="api-cancel" type="button"><svg class="site-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=3#x"/></svg><span>取消</span></button><button class="form-submit" id="api-save" type="submit"><svg class="site-icon" viewBox="0 0 256 256" aria-hidden="true"><use href="/site-icons.svg?v=3#floppy-disk"/></svg><span>保存并使用</span></button></div>
   </form>
 </dialog>
-<script type="module" src="/chat.js?v=13"></script>
+<script type="module" src="/chat.js?v=14"></script>
 <script type="module">
-  import {showDialog,hideDialog,setPopoverOpen} from './ui-motion.js?v=1';
-  import {createIcon,decorateCard,cardCharms,randomCardCharm} from './site-icons.js?v=4';
+  import {setPopoverOpen} from './ui-motion.js?v=1';
+  import {initAddSite} from './add-site.js?v=2';
+  import {createSiteLibrary} from './site-library.js?v=2';
+  import {initRecycleBin} from './recycle-bin.js?v=2';
+  import {showError} from './error-dialog.js?v=1';
+  import {createIcon,decorateCard,randomCardCharm} from './site-icons.js?v=4';
   const syncAmbientMotion=()=>document.documentElement.toggleAttribute('data-motion-paused',document.hidden);
   document.addEventListener('visibilitychange',syncAmbientMotion);
   syncAmbientMotion();
   (() => {
     const grid = document.querySelector('#site-grid');
-    grid.querySelectorAll('.card').forEach(decorateCard);
+    const defaultCards = new Map(), defaultSites = [];
+    grid.querySelectorAll('.card').forEach((card,index) => {
+      decorateCard(card,index);card.dataset.siteId = 'default:' + card.getAttribute('href');card.draggable = true;card.setAttribute('aria-keyshortcuts','Delete');
+      defaultCards.set(card.dataset.siteId,card.closest('li').cloneNode(true));
+      defaultSites.push({id:card.dataset.siteId,name:card.querySelector('.card__name').textContent,url:card.href,note:card.querySelector('.card__note')?.textContent || '',charm:card.querySelector('.card__charm use')?.getAttribute('href').split('#')[1] || ''});
+    });
+    const library = createSiteLibrary({defaults:defaultSites});
     const stage = document.querySelector('#shelf-stage');
     const viewport = document.createElement('div');
     viewport.className = 'shelf__viewport';
@@ -569,15 +607,12 @@
     const next = document.querySelector('#page-next');
     const themeToggle = document.querySelector('#theme-toggle');
     const palette = document.querySelector('#theme-palette');
-    const dialog = document.querySelector('#add-dialog');
-    const form = document.querySelector('#add-form');
-    const error = document.querySelector('#form-error');
     const themeStyles = {
       pink: ['#F04496','rgba(240,68,150,.16)','rgba(213,43,120,.27)','#C52F70','#C24A83','#92516F'],
       blue: ['#2587F5','rgba(37,135,245,.15)','rgba(24,109,211,.26)','#176BCB','#377CC2','#456C91'],
       green: ['#19A974','rgba(25,169,116,.15)','rgba(17,132,87,.27)','#128055','#37886C','#4C7867']
     };
-    const storage = {sites:'site-shelf.custom-sites.v1',theme:'site-shelf.theme.v1'};
+    const storage = {theme:'site-shelf.theme.v1'};
     const memoryStorage = new Map();
     const storageGet = key => {
       try { return localStorage.getItem(key); } catch { return memoryStorage.get(key) || null; }
@@ -603,6 +638,7 @@
       const item = document.createElement('li');
       const link = document.createElement('a');
       link.className = 'card';
+      link.dataset.siteId = site.id;link.draggable = true;link.setAttribute('aria-keyshortcuts','Delete');
       link.href = site.url;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
@@ -610,7 +646,7 @@
       const icon = document.createElement('span');
       icon.className = 'card__icon';
       icon.setAttribute('aria-hidden', 'true');
-      icon.append(createIcon('bookmark-simple'));
+      icon.append(createIcon(site.icon || 'bookmark-simple'));
       const body = document.createElement('span');
       body.className = 'card__body';
       const name = document.createElement('span');
@@ -630,6 +666,7 @@
       decorateCard(link,index,site.charm);
       item.append(link);
       track.lastElementChild.querySelector('.grid').append(item);
+      return item;
     };
 
     const layout = (reset = false) => {
@@ -691,21 +728,21 @@
       if (event.animationName === 'page-depth') track.classList.remove('is-sliding');
     });
 
-    try {
-      const savedSites = JSON.parse(storageGet(storage.sites) || '[]');
-      let assignedCharms = false;
-      if (Array.isArray(savedSites)) savedSites.forEach((site, index) => {
-        try {
-          const url = new URL(site.url);
-          if (['http:', 'https:'].includes(url.protocol) && site.name) {
-            if (!cardCharms.includes(site.charm)) { site.charm = randomCardCharm(); assignedCharms = true; }
-            addCard({name:String(site.name),url:url.href,note:String(site.note || ''),charm:site.charm}, grid.children.length);
-          }
-        } catch {}
+    const syncCards = (state, reset = false) => {
+      const existing = new Map([...track.querySelectorAll('.grid > li')].map(item => [item.querySelector('.card').dataset.siteId,item]));
+      const desired = [...defaultCards.keys()].filter(id => !state.hiddenDefaults.includes(id));
+      desired.push(...state.sites.map(site => site.id));
+      const keep = new Set(desired), custom = new Map(state.sites.map(site => [site.id,site]));
+      existing.forEach((item,id) => {if(!keep.has(id))item.remove();});
+      desired.forEach((id,index) => {
+        const item = existing.get(id) || (defaultCards.has(id) ? defaultCards.get(id).cloneNode(true) : addCard(custom.get(id),index));
+        grid.append(item);
       });
-      if (assignedCharms) storageSet(storage.sites, JSON.stringify(savedSites));
-      setTheme(storageGet(storage.theme) || 'pink', false);
-    } catch { setTheme('pink', false); }
+      layout(reset);
+    };
+    try { syncCards(library.read()); } catch(error) { void showError(error); }
+    setTheme(storageGet(storage.theme) || 'pink', false);
+    const recycle = initRecycleBin({root:track,library,onChange:state => syncCards(state)});
 
     themeToggle.addEventListener('click', () => {
       const open = palette.dataset.expanded !== 'true';
@@ -725,36 +762,13 @@
         themeToggle.setAttribute('aria-expanded', 'false');
       }
     });
-    document.querySelector('#add-site').addEventListener('click', () => {
-      error.textContent = '';
-      void showDialog(dialog);
-      document.querySelector('#site-name').focus();
-    });
-    const closeDialog = () => { void hideDialog(dialog); };
-    document.querySelector('#dialog-close').addEventListener('click', closeDialog);
-    document.querySelector('#form-cancel').addEventListener('click', closeDialog);
-    form.addEventListener('submit', event => {
-      event.preventDefault();
-      const data = new FormData(form);
-      const name = String(data.get('name') || '').trim();
-      const inputUrl = String(data.get('url') || '').trim();
-      const note = String(data.get('note') || '').trim();
-      let url;
-      try { url = new URL(inputUrl); } catch { error.textContent = '请输入有效的网站地址'; return; }
-      if (!['http:', 'https:'].includes(url.protocol)) { error.textContent = '网站地址需要以 http:// 或 https:// 开头'; return; }
-      const site = {name,url:url.href,note,charm:randomCardCharm()};
-      const customSites = JSON.parse(storageGet(storage.sites) || '[]');
-      customSites.push(site);
-      storageSet(storage.sites, JSON.stringify(customSites));
-      addCard(site, grid.children.length);
-      layout(true);
-      form.reset();
-      closeDialog();
-    });
+    initAddSite({onAdd(details) {
+      const state = library.add({...details,charm:randomCardCharm()});syncCards(state,true);recycle.refresh(state);
+    }});
     prev.addEventListener('click', () => changePage(-1));
     next.addEventListener('click', () => changePage(1));
     stage.addEventListener('wheel', event => {
-      if (dialog.open || event.ctrlKey || event.metaKey) return;
+      if (document.querySelector('dialog[open]') || document.body.classList.contains('is-site-dragging') || event.ctrlKey || event.metaKey) return;
       const delta = Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
       if (!delta) return;
       const direction = delta > 0 ? 1 : -1;

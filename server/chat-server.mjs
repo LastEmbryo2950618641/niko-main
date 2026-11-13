@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { normalizeProfile } from '../chat-settings.js';
 import { ChatError, normalizeBaseUrl, streamModel } from './model-client.mjs';
+import {exploreSite} from './site-explorer.mjs';
 
 const maxBody=256*1024,cookieName='niko_chat_session';
 function text(value,max,label) { if(typeof value!=='string'||!value.trim()||value.length>max) throw new ChatError(400,`请填写有效的${label}`);return value.trim(); }
@@ -20,7 +21,7 @@ function sessionFor(req,res,secure) {
   res.setHeader('Set-Cookie',`${cookieName}=${created}; Path=/chat-api/; Max-Age=31536000; HttpOnly; SameSite=Strict${secure?'; Secure':''}`);
   return created;
 }
-export async function createChatServer({publicOrigin,transport}={}) {
+export async function createChatServer({publicOrigin,transport,websiteTransport,resolveSite}={}) {
   const active=new Set(),rate=new Map();
   const server=createServer(async(req,res)=>{
     res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
@@ -34,7 +35,8 @@ export async function createChatServer({publicOrigin,transport}={}) {
       const path=new URL(req.url,origin).pathname;
       if(path==='/chat-api/health'&&req.method==='GET') return json(200,{ok:true});
       if(['/chat-api/config','/chat-api/active'].includes(path)) throw new ChatError(410,'API 配置已改为仅保存在本机浏览器，请刷新页面后重新填写。');
-      if(path!=='/chat-api/chat') throw new ChatError(404,'接口不存在');
+      if(!['/chat-api/chat','/chat-api/site-preview'].includes(path)) throw new ChatError(404,'接口不存在');
+      if(req.method!=='POST')throw new ChatError(405,'请求方法不支持');
       session=sessionFor(req,res,origin.startsWith('https:'));
       // Bound writes per caller; this endpoint never supplies a server-owned API key.
       const remote=req.headers['x-real-ip']??req.socket.remoteAddress;
@@ -44,6 +46,15 @@ export async function createChatServer({publicOrigin,transport}={}) {
       if(rate.size>10000) throw new ChatError(503,'服务繁忙，请稍后重试');
       const body=await bodyJson(req);
       if(body===null||Array.isArray(body)||typeof body!=='object') throw new ChatError(400,'请求格式无效');
+      if(path==='/chat-api/site-preview'){
+        let profile;try{profile=normalizeProfile(body.profile);}catch(error){throw new ChatError(400,error.message);}
+        profile.baseUrl=normalizeBaseUrl(profile.baseUrl);
+        if(active.has(session)||active.size>=16)throw new ChatError(409,'已有 AI 任务正在生成，请先等待完成');
+        active.add(session);controller=new AbortController();timer=setTimeout(()=>controller.abort(new ChatError(504,'生成网站预览超时，请稍后重试')),90000);timer.unref();
+        res.on('close',()=>controller.abort());
+        const preview=await exploreSite(profile,body.url,controller.signal,{transport,websiteTransport,resolve:resolveSite});
+        return json(200,preview);
+      }
       if(path==='/chat-api/chat'&&req.method==='POST') {
         let profile;
         try {profile=normalizeProfile(body.profile);}catch(error){throw new ChatError(400,error.message);}
