@@ -1,0 +1,10 @@
+{
+  "name": "niko-homepage",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "start:chat": "node server/chat-server.mjs"
+  },
+  "engines": { "node": ">=22" }
+}

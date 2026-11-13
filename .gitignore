@@ -2,3 +2,5 @@
 Thumbs.db
 *.log
 .playwright-cli/
+node_modules/
+.chat-state/
