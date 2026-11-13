@@ -1,9 +1,11 @@
 import {createBrowserSettings,settingsKey} from './browser-settings.js?v=1';
 import {createChatTransition,showDialog,hideDialog} from './ui-motion.js?v=1';
+import {enhanceSelects} from './select-menu.js?v=1';
 const $=id=>document.getElementById(id);
 const chatPanel=$('chat-panel'),chatToggle=$('chat-toggle'),chatInput=$('chat-input'),messagesNode=$('chat-messages');
 const dialog=$('api-dialog'),profileSelect=$('api-profile'),keyInput=$('api-key');
 const settingsStore=createBrowserSettings();
+const selectMenus=enhanceSelects(document.querySelectorAll('.chat-profile select,.api-form select'));
 const initialProfile={id:'deepseek',name:'DeepSeek',provider:'deepseek',protocol:'openai',hasApiKey:false};
 let settings={activeProfileId:'deepseek',profiles:[initialProfile]},ready=false,loading,settingsRevision=0,controller,preparing=false,frame,historyTimer;
 let conversation=[];
@@ -26,6 +28,7 @@ function updateSettings(next) {
   const previous=profileSelect.value;
   profileSelect.replaceChildren(option('__new','＋ 新配置'),...next.profiles.map(p=>option(p.id,p.name)));
   profileSelect.value=next.profiles.some(p=>p.id===previous)?previous:next.activeProfileId;
+  selectMenus.refresh();
   renderMessages();
 }
 async function loadSettings() {
@@ -50,6 +53,7 @@ function fillProfile(id) {
   $('api-key-toggle').textContent='显示';$('api-key-toggle').setAttribute('aria-label','显示 API Key');
   $('api-delete').hidden=!profile?.hasApiKey&&id==='deepseek'||!profile;
   $('api-delete').textContent=id==='deepseek'?'清除 Key':'删除配置';apiStatus('');
+  selectMenus.refresh();
 }
 async function openSettings() {
   if(!dialog.open||dialog.hasAttribute('data-closing')) void showDialog(dialog);

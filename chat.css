@@ -18,3 +18,29 @@
 @media(max-width:639px){.tool-button.tool-button--label{padding:0 10px;gap:5px;font-size:12px;}.toolbar{gap:7px;}.chat-panel{margin:0 24px;border-radius:13px;}.chat-panel__head{padding:8px 10px;gap:5px;}.chat-profile{gap:4px;}.chat-profile>span{display:none;}.chat-profile select{max-width:180px;min-width:90px;}.chat-messages{padding:12px;}.chat-message__body{font-size:13px;padding:8px 10px;}.chat-compose{padding:8px;gap:6px;}.chat-send{padding:0 11px;}.chat-notice{padding:0 10px 7px;font-size:10px;}.add-dialog.api-dialog{width:100%;max-width:none;max-height:92dvh;position:fixed;top:auto;bottom:0;margin:0;border-radius:18px 18px 0 0;border-bottom:0;}.api-form{padding:20px 18px max(20px,env(safe-area-inset-bottom));}}
 @media(max-height:550px){.chat-panel{margin-bottom:0;}.chat-empty{min-height:30px;}.chat-messages{padding:8px 12px;}.chat-notice{display:none;}.chat-panel__head{padding:5px 10px;}}
 @media(prefers-reduced-motion:reduce){.chat-toggle__chevron{transition:none;}}
+
+/* Styled selection controls, including the expanded menu. */
+.select-menu{position:relative;min-width:0;width:100%;}
+.select-menu>select[hidden]{display:none!important;}
+.select-menu__trigger{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-width:0;height:42px;padding:0 12px;border:1px solid rgba(71,58,83,.19);border-radius:10px;background:#fff;color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:border-color 180ms ease,box-shadow 180ms ease,background-color 180ms ease;}
+.select-menu__trigger:hover:not(:disabled){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 3%,white);}
+.select-menu__trigger[aria-expanded="true"],.select-menu__trigger:focus-visible{outline:none!important;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.select-menu__trigger:disabled{opacity:.5;cursor:default;background:#f0eef3;}
+.select-menu__value{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.select-menu__chevron{display:flex;flex:none;color:var(--muted);transition:transform 180ms ease,color 180ms ease;}
+.select-menu__chevron svg,.select-menu__check svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.select-menu__trigger[aria-expanded="true"] .select-menu__chevron{transform:rotate(180deg);color:var(--accent);}
+.select-menu__options{position:fixed;inset:auto;z-index:20;margin:0;padding:5px;max-height:280px;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;box-sizing:border-box;border:1px solid var(--accent-edge);border-radius:12px;background:rgba(250,250,255,.99);color:var(--ink);font:inherit;font-size:13px;box-shadow:0 12px 32px -10px rgba(28,24,45,.26),0 1px 0 rgba(255,255,255,.8) inset;transform-origin:top center;}
+.select-menu__options[data-side="above"]{transform-origin:bottom center;}
+.select-menu__options[hidden]{display:none!important;}
+.select-menu__option{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:36px;padding:8px 10px;border-radius:7px;line-height:1.5;cursor:pointer;user-select:none;transition:background-color 150ms ease,color 150ms ease;}
+.select-menu__option-text{min-width:0;overflow-wrap:anywhere;}
+.select-menu__option[aria-selected="true"]{color:var(--accent-dark);font-weight:600;background:var(--accent-soft);}
+.select-menu__option.is-active:not([aria-disabled="true"]){color:var(--accent-dark);background:color-mix(in srgb,var(--accent) 13%,white);}
+.select-menu__option[aria-disabled="true"]{opacity:.45;cursor:default;}
+.select-menu__check{display:flex;flex:none;color:var(--accent);opacity:0;transition:opacity 150ms ease;}
+.select-menu__option[aria-selected="true"] .select-menu__check{opacity:1;}
+.chat-profile .select-menu{width:220px;max-width:100%;}
+.chat-profile .select-menu__trigger{height:32px;padding:0 9px;font-size:12px;font-weight:600;border-radius:8px;}
+@media(max-width:639px){.chat-profile>label{display:none;}.chat-profile .select-menu{width:180px;}.select-menu__option{min-height:42px;}}
+@media(prefers-reduced-motion:reduce){.select-menu__trigger,.select-menu__chevron,.select-menu__option,.select-menu__check{transition:none!important;}}
