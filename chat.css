@@ -34,6 +34,7 @@
 .select-menu__options[data-side="above"]{transform-origin:bottom center;}
 .select-menu__options[hidden]{display:none!important;}
 .select-menu__option{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:36px;padding:8px 10px;border-radius:7px;line-height:1.5;cursor:pointer;user-select:none;transition:background-color 150ms ease,color 150ms ease;}
+.select-menu__option+.select-menu__option{margin-top:6px;}
 .select-menu__option-text{min-width:0;overflow-wrap:anywhere;}
 .select-menu__option[aria-selected="true"]{color:var(--accent-dark);font-weight:600;background:var(--accent-soft);}
 .select-menu__option.is-active:not([aria-disabled="true"]){color:var(--accent-dark);background:color-mix(in srgb,var(--accent) 13%,white);}
