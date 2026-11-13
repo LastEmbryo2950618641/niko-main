@@ -1,7 +1,8 @@
 import {createBrowserSettings,settingsKey} from './browser-settings.js?v=1';
 import {createChatTransition,showDialog,hideDialog} from './ui-motion.js?v=1';
-import {enhanceSelects} from './select-menu.js?v=2';
+import {enhanceSelects} from './select-menu.js?v=3';
 import {createConversationArchive,conversationTitle} from './chat-conversations.js?v=1';
+import {createIcon,setIconLabel} from './site-icons.js?v=1';
 const $=id=>document.getElementById(id);
 const chatPanel=$('chat-panel'),chatToggle=$('chat-toggle'),chatInput=$('chat-input'),messagesNode=$('chat-messages');
 const dialog=$('api-dialog'),profileSelect=$('api-profile'),keyInput=$('api-key');
@@ -51,9 +52,9 @@ function fillProfile(id) {
   for(const id of ['api-name','api-base','api-model']) {$(id).required=custom;$(id).disabled=!custom;}
   keyInput.value='';keyInput.type='password';keyInput.required=!profile?.hasApiKey;
   keyInput.placeholder=profile?.hasApiKey?'已保存，留空不修改':'粘贴 Key';
-  $('api-key-toggle').textContent='显示';$('api-key-toggle').setAttribute('aria-label','显示 API Key');
+  $('api-key-toggle').replaceChildren(createIcon('eye'));$('api-key-toggle').setAttribute('aria-label','显示 API Key');$('api-key-toggle').title='显示 API Key';
   $('api-delete').hidden=!profile?.hasApiKey&&id==='deepseek'||!profile;
-  $('api-delete').textContent=id==='deepseek'?'清除 Key':'删除配置';apiStatus('');
+  setIconLabel($('api-delete'),id==='deepseek'?'清除 Key':'删除配置','trash');apiStatus('');
   selectMenus.refresh();
 }
 async function openSettings() {
@@ -73,7 +74,7 @@ $('api-protocol').addEventListener('change',()=>{
   const isClaude=$('api-protocol').value==='claude';
   $('api-base').placeholder=isClaude?'https://api.anthropic.com/v1':'https://api.openai.com/v1';
 });
-$('api-key-toggle').addEventListener('click',()=>{const reveal=keyInput.type==='password';keyInput.type=reveal?'text':'password';$('api-key-toggle').textContent=reveal?'隐藏':'显示';$('api-key-toggle').setAttribute('aria-label',reveal?'隐藏 API Key':'显示 API Key');});
+$('api-key-toggle').addEventListener('click',()=>{const reveal=keyInput.type==='password',label=reveal?'隐藏 API Key':'显示 API Key';keyInput.type=reveal?'text':'password';$('api-key-toggle').replaceChildren(createIcon(reveal?'eye-slash':'eye'));$('api-key-toggle').setAttribute('aria-label',label);$('api-key-toggle').title=label;});
 $('api-form').addEventListener('submit',async event=>{
   event.preventDefault();if($('api-save').disabled) return;
   const builtin=profileSelect.value==='deepseek';
@@ -115,7 +116,7 @@ function element(tag,className,text) {const node=document.createElement(tag);if(
 function renderConversations() {
   const fragment=document.createDocumentFragment();
   for(const item of [...archiveState.items].sort((a,b)=>b.updatedAt-a.updatedAt)) {
-    const button=element('button','chat-history__item',conversationTitle(item));button.type='button';button.dataset.conversationId=item.id;button.title=conversationTitle(item);button.disabled=Boolean(controller)||preparing;
+    const button=element('button','chat-history__item');setIconLabel(button,conversationTitle(item),'paw-print');button.type='button';button.dataset.conversationId=item.id;button.title=conversationTitle(item);button.disabled=Boolean(controller)||preparing;
     if(item.id===archiveState.activeId)button.setAttribute('aria-current','true');
     button.addEventListener('click',()=>activateConversation(item.id));fragment.append(button);
   }
@@ -141,15 +142,17 @@ window.addEventListener('resize',()=>setHistoryOpen($('chat-history-toggle').get
 function renderMessages() {
   const follow=messagesNode.scrollHeight-messagesNode.scrollTop-messagesNode.clientHeight<70;
   if(!conversation.length) {
-    const empty=element('div','chat-empty');empty.append(element('strong',null,'想聊点什么？'));
-    if(!settings.profiles.some(p=>p.hasApiKey)) {const button=element('button','chat-text-button','配置 API Key');button.type='button';button.addEventListener('click',()=>void openSettings());empty.append(button);}
+    const empty=element('div','chat-empty'),crest=element('div','chat-empty__crest');crest.setAttribute('aria-hidden','true');
+    crest.append(createIcon('cat','chat-empty__cat'));empty.append(crest,element('strong',null,'想聊点什么？'));
+    if(!settings.profiles.some(p=>p.hasApiKey)) {const button=element('button','chat-text-button');setIconLabel(button,'配置 API Key','key');button.type='button';button.addEventListener('click',()=>void openSettings());empty.append(button);}
+    const accessories=element('div','chat-empty__accessories');accessories.setAttribute('aria-hidden','true');accessories.append(createIcon('paw-print'),createIcon('dress'),createIcon('heart'));empty.append(accessories);
     messagesNode.replaceChildren(empty);return;
   }
   const fragment=document.createDocumentFragment();
   for(const message of conversation) {
     const article=element('article',`chat-message chat-message--${message.role}`);
-    article.append(element('p','chat-message__label',message.role==='user'?'你':message.label??'助手'));
-    if(message.reasoning) {const details=element('details','chat-message__reasoning');details.append(element('summary',null,'思考过程'),element('p',null,message.reasoning));article.append(details);}
+    const label=element('p','chat-message__label',message.role==='user'?'你':message.label??'助手');label.prepend(createIcon(message.role==='user'?'paw-print':'dress'));article.append(label);
+    if(message.reasoning) {const details=element('details','chat-message__reasoning'),summary=element('summary',null,'思考过程');summary.prepend(createIcon('sparkle'));details.append(summary,element('p',null,message.reasoning));article.append(details);}
     article.append(element('div','chat-message__body',message.text||(message.status==='working'?'思考中…':message.status==='stopped'?'已停止':'未收到回复')));
     if(message.error) article.append(element('p','chat-message__error',message.error));
     if(message.status==='stopped'&&message.text) article.append(element('p','chat-message__label','已停止 · 内容已保留'));
@@ -219,4 +222,4 @@ $('chat-form').addEventListener('submit',async event=>{
   } finally {controller=undefined;setRunning(false);queueRender();chatInput.focus();}
 });
 window.addEventListener('pagehide',()=>{controller?.abort();flushConversation();});
-renderMessages();renderConversations();if(archiveError)notice(archiveError);
+setIconLabel($('api-reset'),'重置本地配置','trash');renderMessages();renderConversations();if(archiveError)notice(archiveError);

@@ -1,4 +1,5 @@
 // Keep the native select as the form/state source; render a consistent, accessible menu.
+import {createIcon} from './site-icons.js?v=1';
 const chevron='<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 8 5 5 5-5"/></svg>';
 const check='<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 10 4 4 8-8"/></svg>';
 export function enhanceSelects(selects) {
@@ -13,7 +14,7 @@ export function enhanceSelects(selects) {
     const label=select.getAttribute('aria-label')||Array.from(select.labels??[]).map(node=>node.textContent.trim()).join(' ')||'选择';
     trigger.setAttribute('aria-label',label);menu.setAttribute('aria-label',label);
     for(const label of Array.from(select.labels??[]))if(label.htmlFor===select.id)label.htmlFor=trigger.id;
-    const icon=document.createElement('span');icon.className='select-menu__chevron';icon.innerHTML=chevron;trigger.append(value,icon);
+    const icon=document.createElement('span');icon.className='select-menu__chevron';icon.innerHTML=chevron;trigger.append(createIcon(select.id==='api-protocol'?'plugs-connected':'key'),value,icon);
     select.before(root);root.append(trigger,select,menu);select.hidden=true;select.tabIndex=-1;
     const topLayer=typeof menu.showPopover==='function';if(topLayer)menu.setAttribute('popover','manual');
     else (select.closest('dialog')??document.body).append(menu);
@@ -70,7 +71,7 @@ export function enhanceSelects(selects) {
       items=Array.from(select.options).map((option,index)=>{
         const node=document.createElement('div'),text=document.createElement('span'),mark=document.createElement('span');
         node.className='select-menu__option';node.id=select.id+'-option-'+index;node.setAttribute('role','option');node.setAttribute('aria-selected',String(option.selected));node.setAttribute('aria-disabled',String(option.disabled));
-        text.className='select-menu__option-text';text.textContent=option.label;mark.className='select-menu__check';mark.innerHTML=check;node.append(text,mark);
+        text.className='select-menu__option-text';text.textContent=option.label;mark.className='select-menu__check';mark.innerHTML=check;node.append(createIcon(option.value==='__new'?'plus':select.id==='api-protocol'?'plugs-connected':'key'),text,mark);
         node.addEventListener('click',()=>choose(index));node.addEventListener('pointermove',event=>{if(event.pointerType==='mouse'&&!option.disabled)setActive(index);});
         node.addEventListener('mousedown',event=>event.preventDefault());
         return {node,disabled:option.disabled,label:option.label};
