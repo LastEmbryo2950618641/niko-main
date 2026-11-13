@@ -23,7 +23,7 @@ function updateSettings(next) {
   $('chat-profile').replaceChildren(...next.profiles.map(p=>option(p.id,p.name+(p.hasApiKey?'':' · 未配置'))));
   $('chat-profile').value=next.activeProfileId;
   const previous=profileSelect.value;
-  profileSelect.replaceChildren(option('__new','＋ 添加自定义配置'),...next.profiles.map(p=>option(p.id,p.name)));
+  profileSelect.replaceChildren(option('__new','＋ 新配置'),...next.profiles.map(p=>option(p.id,p.name)));
   profileSelect.value=next.profiles.some(p=>p.id===previous)?previous:next.activeProfileId;
   renderMessages();
 }
@@ -42,7 +42,7 @@ function fillProfile(id) {
   $('api-model').value=profile?.provider==='custom'?profile.model:'';
   for(const id of ['api-name','api-base','api-model']) {$(id).required=custom;$(id).disabled=!custom;}
   keyInput.value='';keyInput.type='password';keyInput.required=!profile?.hasApiKey;
-  keyInput.placeholder=profile?.hasApiKey?'已保存，留空不修改':'输入你的 API Key';
+  keyInput.placeholder=profile?.hasApiKey?'已保存，留空不修改':'粘贴 Key';
   $('api-key-toggle').textContent='显示';$('api-key-toggle').setAttribute('aria-label','显示 API Key');
   $('api-delete').hidden=!profile?.hasApiKey&&id==='deepseek'||!profile;
   $('api-delete').textContent=id==='deepseek'?'清除 Key':'删除配置';apiStatus('');
@@ -50,7 +50,7 @@ function fillProfile(id) {
 async function openSettings() {
   if(!dialog.open||dialog.hasAttribute('data-closing')) void showDialog(dialog);
   $('api-transport').hidden=location.protocol==='https:'||['localhost','127.0.0.1'].includes(location.hostname);
-  $('api-save').disabled=true;apiStatus('正在读取配置…');
+  $('api-save').disabled=true;apiStatus('读取中…');
   try {await loadSettings();fillProfile(settings.activeProfileId);$('api-save').disabled=false;}
   catch(error) {apiStatus(error.message,true);}
 }
@@ -69,33 +69,33 @@ $('api-form').addEventListener('submit',async event=>{
   const builtin=profileSelect.value==='deepseek';
   const body={provider:builtin?'deepseek':'custom',apiKey:keyInput.value};
   if(!builtin) Object.assign(body,{...(profileSelect.value==='__new'?{}:{id:profileSelect.value}),name:$('api-name').value,protocol:$('api-protocol').value,baseUrl:$('api-base').value,model:$('api-model').value});
-  $('api-save').disabled=true;$('api-delete').disabled=true;apiStatus('正在保存…');
-  try {updateSettings(saveProfile(localStorage,settings,body));fillProfile(settings.activeProfileId);await closeSettings();notice('配置已保存在此浏览器，可以开始对话。');chatInput.focus({preventScroll:true});}
+  $('api-save').disabled=true;$('api-delete').disabled=true;apiStatus('保存中…');
+  try {updateSettings(saveProfile(localStorage,settings,body));fillProfile(settings.activeProfileId);await closeSettings();notice('已保存');chatInput.focus({preventScroll:true});}
   catch(error) {apiStatus(error.message,true);}
   finally {$('api-save').disabled=false;$('api-delete').disabled=false;}
 });
 $('api-delete').addEventListener('click',async()=>{
   $('api-delete').disabled=true;$('api-save').disabled=true;
-  try {updateSettings(deleteProfile(localStorage,settings,profileSelect.value));fillProfile(settings.activeProfileId);apiStatus('已清除。');}
+  try {updateSettings(deleteProfile(localStorage,settings,profileSelect.value));fillProfile(settings.activeProfileId);apiStatus('已清除');}
   catch(error) {apiStatus(error.message,true);}
   finally {$('api-delete').disabled=false;$('api-save').disabled=false;}
 });
 $('chat-profile').addEventListener('change',async()=>{
   const select=$('chat-profile');select.disabled=true;
-  try {updateSettings(selectProfile(localStorage,settings,select.value));notice('已切换配置；后续消息使用新配置。');}
+  try {updateSettings(selectProfile(localStorage,settings,select.value));notice('已切换');}
   catch(error) {select.value=settings.activeProfileId;notice(error.message);}
   finally {select.disabled=Boolean(controller);}
 });
 
 function persistConversation() {
   clearTimeout(historyTimer);
-  historyTimer=setTimeout(()=>{try {sessionStorage.setItem('site-shelf.chat.messages.v1',JSON.stringify(conversation));} catch {notice('浏览器存储空间不足，对话仅在此页面内保留。');}},400);
+  historyTimer=setTimeout(()=>{try {sessionStorage.setItem('site-shelf.chat.messages.v1',JSON.stringify(conversation));} catch {notice('存储空间不足，刷新将丢失对话。');}},400);
 }
 function element(tag,className,text) {const node=document.createElement(tag);if(className) node.className=className;if(text!==undefined) node.textContent=text;return node;}
 function renderMessages() {
   const follow=messagesNode.scrollHeight-messagesNode.scrollTop-messagesNode.clientHeight<70;
   if(!conversation.length) {
-    const empty=element('div','chat-empty');empty.append(element('strong',null,'想聊点什么？'),element('p',null,'选择一个 API 配置，随时在收藏页问问题、整理灵感。'));
+    const empty=element('div','chat-empty');empty.append(element('strong',null,'想聊点什么？'));
     if(!settings.profiles.some(p=>p.hasApiKey)) {const button=element('button','chat-text-button','配置 API Key');button.type='button';button.addEventListener('click',()=>void openSettings());empty.append(button);}
     messagesNode.replaceChildren(empty);return;
   }
@@ -104,9 +104,9 @@ function renderMessages() {
     const article=element('article',`chat-message chat-message--${message.role}`);
     article.append(element('p','chat-message__label',message.role==='user'?'你':message.label??'助手'));
     if(message.reasoning) {const details=element('details','chat-message__reasoning');details.append(element('summary',null,'思考过程'),element('p',null,message.reasoning));article.append(details);}
-    article.append(element('div','chat-message__body',message.text||(message.status==='working'?'正在思考…':message.status==='stopped'?'已停止。':'未收到回复。')));
+    article.append(element('div','chat-message__body',message.text||(message.status==='working'?'思考中…':message.status==='stopped'?'已停止':'未收到回复')));
     if(message.error) article.append(element('p','chat-message__error',message.error));
-    if(message.status==='stopped'&&message.text) article.append(element('p','chat-message__label','已停止生成，以上内容已保留。'));
+    if(message.status==='stopped'&&message.text) article.append(element('p','chat-message__label','已停止 · 内容已保留'));
     fragment.append(article);
   }
   messagesNode.replaceChildren(fragment);
@@ -124,7 +124,7 @@ chatToggle.addEventListener('click',()=>{
   if(open){renderMessages();resizeInput();void loadSettings().catch(error=>notice(error.message));void finished.then(()=>{if(chatToggle.getAttribute('aria-expanded')==='true'&&!chatPanel.closest('.shelf').dataset.switching)chatInput.focus({preventScroll:true});});}
 });
 window.addEventListener('storage',event=>{if(event.key===settingsKey||event.key===null){ready=false;void loadSettings().then(()=>{if(controller)setRunning(true);}).catch(error=>notice(error.message));}});
-$('chat-new').addEventListener('click',()=>{if(controller) return;conversation=[];renderMessages();persistConversation();notice('已开始新对话。');chatInput.focus();});
+$('chat-new').addEventListener('click',()=>{if(controller) return;conversation=[];renderMessages();persistConversation();notice('Enter 发送 · Shift + Enter 换行');chatInput.focus();});
 $('chat-stop').addEventListener('click',()=>controller?.abort());
 
 async function* eventsFrom(response) {
@@ -142,12 +142,12 @@ $('chat-form').addEventListener('submit',async event=>{
   preparing=true;
   try {await loadSettings();} catch(error) {notice(error.message);return;} finally {preparing=false;}
   const profile=settings.profiles.find(p=>p.id===settings.activeProfileId);
-  if(!profile?.hasApiKey) {notice('请先保存 API Key。');void openSettings();return;}
+  if(!profile?.hasApiKey) {notice('请先配置 API Key');void openSettings();return;}
   const history=conversation.filter(m=>m.text.trim()).map(m=>({role:m.role,content:m.text}));history.push({role:'user',content:text});
-  if(history.length>200||JSON.stringify(history).length>240000) {notice('对话内容已较多，请点击“新对话”后继续。');return;}
+  if(history.length>200||JSON.stringify(history).length>240000) {notice('对话已达上限，请新建对话。');return;}
   conversation.push({role:'user',text,status:'complete'});
   const answer={role:'assistant',text:'',reasoning:'',status:'working',label:profile.name};conversation.push(answer);
-  controller=new AbortController();setRunning(true);chatInput.value='';resizeInput();renderMessages();messagesNode.scrollTop=messagesNode.scrollHeight;persistConversation();notice('正在回复，可以随时停止；折叠面板不会中断对话。');
+  controller=new AbortController();setRunning(true);chatInput.value='';resizeInput();renderMessages();messagesNode.scrollTop=messagesNode.scrollHeight;persistConversation();notice('回复中…');
   try {
     const {hasApiKey,...requestProfile}=profile;
     const response=await api('chat',{method:'POST',body:{profile:requestProfile,messages:history},signal:controller.signal});let done=false;
@@ -159,12 +159,12 @@ $('chat-form').addEventListener('submit',async event=>{
       if(event.type==='done') done=true;
       queueRender();
     }
-    if(!done) throw new Error('连接提前断开，已保留收到的内容。');
-    answer.status='complete';notice('回复完成。Enter 发送，Shift + Enter 换行。');
+    if(!done) throw new Error('连接中断 · 内容已保留');
+    answer.status='complete';notice('Enter 发送 · Shift + Enter 换行');
   } catch(error) {
     answer.status=controller.signal.aborted?'stopped':'error';
     if(answer.status==='error') answer.error=error.message;
-    notice(answer.status==='stopped'?'已停止，没有自动重试。':'回复失败，没有自动重试；可以检查配置后重新发送。');
+    notice(answer.status==='stopped'?'已停止':'回复失败，请检查配置。');
   } finally {controller=undefined;setRunning(false);queueRender();chatInput.focus();}
 });
 window.addEventListener('pagehide',()=>{controller?.abort();try {sessionStorage.setItem('site-shelf.chat.messages.v1',JSON.stringify(conversation));} catch {}});

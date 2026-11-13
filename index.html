@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#26304A">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>网站收藏</title>
-<link rel="stylesheet" href="/chat.css?v=4">
+<link rel="stylesheet" href="/chat.css?v=5">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23262F45'/%3E%3Crect x='7' y='8' width='7' height='7' rx='2' fill='%23E7C58E'/%3E%3Crect x='18' y='8' width='7' height='7' rx='2' fill='%23A9B8DA'/%3E%3Crect x='7' y='18' width='7' height='7' rx='2' fill='%23A9B8DA'/%3E%3Crect x='18' y='18' width='7' height='7' rx='2' fill='%23E7C58E'/%3E%3C/svg%3E">
 <style>
   :root{
@@ -135,7 +135,6 @@
   .add-form{padding:24px;}
   .add-form__head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;}
   .add-form__title{margin:0;font-size:19px;line-height:1.4;}
-  .add-form__hint{margin:5px 0 0;color:var(--muted);font-size:13px;}
   .dialog-close{width:34px;height:34px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-size:23px;line-height:1;cursor:pointer;}
   .dialog-close:hover{background:rgba(40,35,52,.08);color:var(--ink);}
   .field{display:grid;gap:7px;margin-top:14px;}
@@ -357,7 +356,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.3a2.2 2.2 0 0 0 1.6-3.7 1.1 1.1 0 0 1 .8-1.9H18a3 3 0 0 0 3-3c0-5.2-4-9.4-9-9.4Z"/><circle cx="7.8" cy="10" r="1"/><circle cx="11" cy="7" r="1"/><circle cx="15" cy="7.7" r="1"/></svg>
       </button>
       <div class="palette" id="theme-palette" hidden>
-        <p class="palette__label">悬停文字颜色</p>
+        <p class="palette__label">主题颜色</p>
         <div class="palette__list" role="group" aria-label="选择悬停文字颜色">
           <button class="palette__option" type="button" data-theme="pink" aria-label="粉色" aria-pressed="true" style="--swatch:#F04496"><span class="palette__swatch"></span></button>
           <button class="palette__option" type="button" data-theme="blue" aria-label="蓝色" aria-pressed="false" style="--swatch:#2587F5"><span class="palette__swatch"></span></button>
@@ -371,15 +370,15 @@
   </div>
   <section class="chat-panel" id="chat-panel" aria-label="AI 对话" hidden>
     <div class="chat-panel__head">
-      <label class="chat-profile"><span>当前配置</span><select id="chat-profile" aria-label="对话使用的 API 配置"><option value="deepseek">DeepSeek · 未配置</option></select></label>
+      <label class="chat-profile"><span>配置</span><select id="chat-profile" aria-label="对话使用的 API 配置"><option value="deepseek">DeepSeek · 未配置</option></select></label>
       <button class="chat-text-button" id="chat-new" type="button">新对话</button>
     </div>
     <div class="chat-messages" id="chat-messages" role="log" aria-label="对话记录" aria-live="off"></div>
     <form class="chat-compose" id="chat-form">
-      <textarea id="chat-input" aria-label="输入消息" placeholder="写下你的问题…" rows="1" maxlength="100000"></textarea>
+      <textarea id="chat-input" aria-label="输入消息" placeholder="输入消息…" rows="1" maxlength="100000"></textarea>
       <button class="chat-send" id="chat-send" type="submit">发送</button><button class="chat-send" id="chat-stop" type="button" hidden>停止</button>
     </form>
-    <p class="chat-notice" id="chat-notice" role="status">Enter 发送，Shift + Enter 换行 · 使用你自己的 API 额度</p>
+    <p class="chat-notice" id="chat-notice" role="status">Enter 发送 · Shift + Enter 换行</p>
   </section>
   <div class="shelf__stage" id="shelf-stage">
   <button class="page-arrow page-arrow--prev" id="page-prev" type="button" aria-label="上一页" title="上一页">
@@ -392,7 +391,6 @@
       <span class="card__body">
         <span class="card__name">轻小说文库</span>
         <span class="card__domain">nikowenku-archive</span>
-        <span class="card__note">浏览与阅读收藏作品</span>
       </span>
     </a></li>
 
@@ -401,7 +399,6 @@
       <span class="card__body">
         <span class="card__name">星海余页</span>
         <span class="card__domain">StarseaFolio</span>
-        <span class="card__note">与 AI 一起构思、规划与创作小说</span>
       </span>
     </a></li>
 
@@ -410,7 +407,6 @@
       <span class="card__body">
         <span class="card__name">哔哩哔哩</span>
         <span class="card__domain">bilibili.com</span>
-        <span class="card__note">追番与弹幕视频</span>
       </span>
     </a></li>
 
@@ -419,7 +415,6 @@
       <span class="card__body">
         <span class="card__name">Pixiv</span>
         <span class="card__domain">pixiv.net</span>
-        <span class="card__note">插画收藏与画师关注</span>
       </span>
     </a></li>
 
@@ -428,7 +423,6 @@
       <span class="card__body">
         <span class="card__name">网易云音乐</span>
         <span class="card__domain">music.163.com</span>
-        <span class="card__note">歌单与每日推荐</span>
       </span>
     </a></li>
 
@@ -437,7 +431,6 @@
       <span class="card__body">
         <span class="card__name">PixAI</span>
         <span class="card__domain">pixai.art</span>
-        <span class="card__note">AI 绘画与二次元插画创作</span>
       </span>
     </a></li>
 
@@ -446,18 +439,17 @@
       <span class="card__body">
         <span class="card__name">OiiOii</span>
         <span class="card__domain">oiioii.ai</span>
-        <span class="card__note">AI 动画与视频创作</span>
       </span>
     </a></li>
 
     <li><a class="card" style="--i:5" href="https://chat.deepseek.com/" target="_blank" rel="noopener noreferrer">
       <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-link" xlink:href="#i-link"/></svg></span>
-      <span class="card__body"><span class="card__name">DeepSeek</span><span class="card__domain">chat.deepseek.com</span><span class="card__note">DeepSeek 在线对话</span></span>
+      <span class="card__body"><span class="card__name">DeepSeek</span><span class="card__domain">chat.deepseek.com</span></span>
     </a></li>
 
     <li><a class="card" style="--i:6" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">
       <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-link" xlink:href="#i-link"/></svg></span>
-      <span class="card__body"><span class="card__name">ChatGPT</span><span class="card__domain">chatgpt.com</span><span class="card__note">OpenAI 在线对话</span></span>
+      <span class="card__body"><span class="card__name">ChatGPT</span><span class="card__domain">chatgpt.com</span></span>
     </a></li>
 
     <li><a class="card" style="--i:9" href="https://github.com" target="_blank" rel="noopener noreferrer">
@@ -465,7 +457,6 @@
       <span class="card__body">
         <span class="card__name">GitHub</span>
         <span class="card__domain">github.com</span>
-        <span class="card__note">代码托管与开源项目</span>
       </span>
     </a></li>
 
@@ -474,7 +465,6 @@
       <span class="card__body">
         <span class="card__name">Steam</span>
         <span class="card__domain">store.steampowered.com</span>
-        <span class="card__note">游戏库与愿望单</span>
       </span>
     </a></li>
 
@@ -483,7 +473,6 @@
       <span class="card__body">
         <span class="card__name">YouTube</span>
         <span class="card__domain">youtube.com</span>
-        <span class="card__note">频道与长视频</span>
       </span>
     </a></li>
 
@@ -500,35 +489,34 @@
 <dialog class="add-dialog" id="add-dialog" aria-labelledby="add-title">
   <form class="add-form" id="add-form">
     <div class="add-form__head">
-      <div><h1 class="add-form__title" id="add-title">添加网站</h1><p class="add-form__hint">把常用网站收进你的收藏页</p></div>
+      <div><h1 class="add-form__title" id="add-title">添加网站</h1></div>
       <button class="dialog-close" type="button" id="dialog-close" aria-label="关闭">×</button>
     </div>
-    <div class="field"><label for="site-name">网站名称</label><input id="site-name" name="name" maxlength="40" placeholder="例如：我的博客" required></div>
-    <div class="field"><label for="site-url">网站地址</label><input id="site-url" name="url" type="url" inputmode="url" placeholder="https://example.com" required></div>
-    <div class="field"><label for="site-note">一句简介 <span style="font-weight:400;color:#746279">（选填）</span></label><input id="site-note" name="note" maxlength="60" placeholder="记录这个网站有什么用"></div>
+    <div class="field"><label for="site-name">名称</label><input id="site-name" name="name" maxlength="40" placeholder="如：我的博客" required></div>
+    <div class="field"><label for="site-url">网址</label><input id="site-url" name="url" type="url" inputmode="url" placeholder="https://example.com" required></div>
+    <div class="field"><label for="site-note">简介 <span style="font-weight:400;color:#746279">（选填）</span></label><input id="site-note" name="note" maxlength="60"></div>
     <p class="form-error" id="form-error" role="alert"></p>
-    <div class="form-actions"><button class="form-cancel" type="button" id="form-cancel">取消</button><button class="form-submit" type="submit">添加到收藏</button></div>
+    <div class="form-actions"><button class="form-cancel" type="button" id="form-cancel">取消</button><button class="form-submit" type="submit">添加</button></div>
   </form>
 </dialog>
 
 <dialog class="add-dialog api-dialog" id="api-dialog" aria-labelledby="api-title">
   <form class="api-form" id="api-form">
-    <div class="add-form__head"><div><h1 class="add-form__title" id="api-title">API 配置</h1><p class="add-form__hint">连接你自己的模型，在首页直接对话</p></div><button class="dialog-close" id="api-close" type="button" aria-label="关闭 API 配置">×</button></div>
-    <div class="field"><label for="api-profile">选择配置</label><select id="api-profile"><option value="__new">＋ 添加自定义配置</option><option value="deepseek" selected>DeepSeek</option></select></div>
+    <div class="add-form__head"><div><h1 class="add-form__title" id="api-title">API 配置</h1></div><button class="dialog-close" id="api-close" type="button" aria-label="关闭 API 配置">×</button></div>
+    <div class="field"><label for="api-profile">配置</label><select id="api-profile"><option value="__new">＋ 新配置</option><option value="deepseek" selected>DeepSeek</option></select></div>
     <div id="api-custom-fields" hidden>
-      <div class="api-row"><div class="field"><label for="api-name">配置名称</label><input id="api-name" maxlength="50" placeholder="例如：我的 Claude"></div><div class="field"><label for="api-protocol">接口协议</label><select id="api-protocol"><option value="openai">OpenAI 协议</option><option value="claude">Claude 协议</option></select></div></div>
+      <div class="api-row"><div class="field"><label for="api-name">名称</label><input id="api-name" maxlength="50" placeholder="如：Claude"></div><div class="field"><label for="api-protocol">协议</label><select id="api-protocol"><option value="openai">OpenAI</option><option value="claude">Claude</option></select></div></div>
       <div class="field"><label for="api-base">Base URL</label><input id="api-base" type="url" maxlength="2048" placeholder="https://api.openai.com/v1" autocomplete="off" spellcheck="false"></div>
-      <div class="field"><label for="api-model">模型名称</label><input id="api-model" maxlength="150" placeholder="填写服务商提供的模型 ID" autocomplete="off" spellcheck="false"></div>
+      <div class="field"><label for="api-model">模型 ID</label><input id="api-model" maxlength="150" autocomplete="off" spellcheck="false"></div>
     </div>
-    <p class="api-help" id="api-deepseek-help">已内置 DeepSeek 官方接口与模型，只需填写 API Key。<a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer">获取 Key</a></p>
-    <div class="field"><label for="api-key">API Key</label><div class="api-key-field"><input id="api-key" type="password" maxlength="4096" placeholder="输入你的 API Key" autocomplete="off" spellcheck="false"><button class="chat-text-button" id="api-key-toggle" type="button" aria-label="显示 API Key">显示</button></div></div>
-    <p class="api-help">API Key 与配置仅保存在当前浏览器的本地存储中；清除站点数据后需重新填写。发送消息时由服务端临时转发，服务端不保存或记录 Key。对话记录仅保留在当前标签页。</p>
-    <p class="api-help api-transport" id="api-transport" hidden>当前是 HTTP 连接，传输未加密；使用真实 Key 前建议改用 HTTPS。</p>
+    <div class="field"><div class="api-key-label"><label for="api-key">API Key</label><a id="api-deepseek-help" href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer">获取 Key</a></div><div class="api-key-field"><input id="api-key" type="password" maxlength="4096" placeholder="粘贴 Key" autocomplete="off" spellcheck="false"><button class="chat-text-button" id="api-key-toggle" type="button" aria-label="显示 API Key">显示</button></div></div>
+    <p class="api-help">Key 仅保存在此浏览器</p>
+    <p class="api-help api-transport" id="api-transport" hidden>HTTP 未加密，请勿使用真实 Key。</p>
     <p class="api-status" id="api-status" role="status"></p>
     <div class="api-footer"><button class="chat-text-button api-delete" id="api-delete" type="button">清除 Key</button><button class="form-cancel" id="api-cancel" type="button">取消</button><button class="form-submit" id="api-save" type="submit">保存并使用</button></div>
   </form>
 </dialog>
-<script type="module" src="/chat.js?v=4"></script>
+<script type="module" src="/chat.js?v=5"></script>
 <script type="module">
   import {showDialog,hideDialog,setPopoverOpen} from './ui-motion.js?v=1';
   (() => {
