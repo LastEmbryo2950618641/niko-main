@@ -16,6 +16,8 @@
 
 `site-icons.js`、`site-icons.svg` 和 `ornaments.css` 提供本地图标与配饰：猫爪、铃铛、蝴蝶结、缎带和裙装用于卡片角落、工具栏、对话空白页和标题，操作保留语义清晰的图标与必要文字。所有图形直接使用图标库原版，不自行绘制或拼接图案；仅调整尺寸、颜色与摆放。主题颜色同步到配饰；装饰不接受点击、不进入辅助技术名称，手机和矮屏减少配饰，尊重减少动态效果设置。图标来自 Phosphor Icons 2.1.1 和 Material Design Icons 7.4.47，许可分别见 `licenses/phosphor-icons-MIT.txt` 与 `licenses/material-design-icons-LICENSE.txt`。所有资源随站点发布，运行时不依赖图标 CDN，也没有新增运行依赖。
 
+按钮顶部的头饰改用 Mozilla Foundation 的 Firefox OS Emoji 原版彩色素材（经 `@iconify-json/fxemoji` 1.2.2 提取）：兔子图标以 CSS 裁去下半部显示兔耳，另用蝴蝶结和皇冠；不修改任何路径，也不自行绘制发箍。来源为 `https://github.com/mozilla/fxemoji`，视觉设计遵循 CC BY 4.0，完整上游许可见 `licenses/firefox-emoji-LICENSE.md`。彩色头饰保留原色，其他配饰改用实心图标、完全不透明并加白色贴纸边缘；功能图标和单色配饰仍随主题变色。
+
 `select-menu.js` 为对话配置、API 配置和协议选择提供统一的圆角菜单、主题选中态、勾选标记与进出过渡，同时保留原生 select 作为表单与业务状态来源。支持方向键、Home/End、Enter、Escape、Tab 和文字定位；菜单优先使用 popover 顶层显示，避免聊天面板或手机弹层裁切，不支持时使用 body/dialog 浮层。窗口变化会关闭菜单，生成期间的禁用状态、动态配置列表与程序选择同步到外观。
 
 ## 首页对话与 API 配置

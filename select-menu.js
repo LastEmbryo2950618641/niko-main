@@ -1,5 +1,5 @@
 // Keep the native select as the form/state source; render a consistent, accessible menu.
-import {createIcon} from './site-icons.js?v=1';
+import {createIcon} from './site-icons.js?v=2';
 const chevron='<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 8 5 5 5-5"/></svg>';
 const check='<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 10 4 4 8-8"/></svg>';
 export function enhanceSelects(selects) {
