@@ -1,8 +1,10 @@
 .tool-button.tool-button--label{width:auto;padding:0 13px;gap:7px;display:inline-flex;font:inherit;font-size:13px;font-weight:600;white-space:nowrap;}
 .chat-toggle{margin-right:auto;}.chat-toggle[aria-expanded="true"]{color:var(--accent-dark);background:#fff;}
 .chat-toggle__chevron{width:15px!important;height:15px!important;transition:transform .2s ease;}.chat-toggle[aria-expanded="true"] .chat-toggle__chevron{transform:rotate(180deg);}
-.chat-panel{flex:0 1 440px;min-height:220px;max-height:48dvh;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--edge);border-radius:var(--radius);background:rgba(248,250,254,.94);backdrop-filter:blur(12px);box-shadow:0 12px 26px -16px rgba(10,16,32,.4);margin:0 32px 18px;}
+.chat-panel{flex:0 0 440px;min-height:220px;max-height:48dvh;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--edge);border-radius:var(--radius);background:rgba(248,250,254,.94);backdrop-filter:blur(12px);box-shadow:0 12px 26px -16px rgba(10,16,32,.4);margin:0 32px 18px;}
 .chat-panel[hidden],.chat-panel [hidden],.api-dialog [hidden]{display:none!important;}.shelf:has(.chat-panel:not([hidden])){justify-content:flex-start;}
+.shelf:has(.chat-panel:not([hidden])) .shelf__stage{flex:none;height:var(--shelf-stage-height,344px);}
+.shelf:has(.chat-panel:not([hidden])) .pagination{flex-shrink:0;}
 .chat-panel__head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;border-bottom:1px solid rgba(71,58,83,.1);flex-shrink:0;}
 .chat-profile{display:flex;align-items:center;gap:9px;min-width:0;font-size:12px;color:var(--muted);}.chat-profile select{max-width:220px;min-width:110px;padding:6px 26px 6px 9px;border:1px solid rgba(71,58,83,.16);border-radius:8px;background:#fff;color:var(--ink);font:inherit;font-weight:600;}
 .chat-text-button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:12px;cursor:pointer;padding:6px;white-space:nowrap;border-radius:6px;}.chat-text-button:hover{background:var(--accent-soft);color:var(--accent-dark);}.chat-text-button:disabled{opacity:.5;cursor:default;}

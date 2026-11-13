@@ -115,7 +115,22 @@ function setRunning(running) {$('chat-send').hidden=running;$('chat-stop').hidde
 function resizeInput(){chatInput.style.height='auto';chatInput.style.height=Math.min(100,chatInput.scrollHeight)+'px';}
 chatInput.addEventListener('input',resizeInput);
 chatInput.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing&&!event.ctrlKey&&!event.metaKey){event.preventDefault();if(!controller) $('chat-form').requestSubmit();}});
+// Reserve the grid's collapsed height, including on short screens and after resizing.
+// Opening chat pushes the grid down; the page clips the overflow instead of shrinking cards.
+const shelf=chatPanel.closest('.shelf'),stage=$('shelf-stage'),toolbar=shelf.querySelector('.toolbar'),pagination=$('pagination');
+function updateShelfHeight(){
+  const outerHeight=node=>{
+    if(node.hidden) return 0;
+    const style=getComputedStyle(node);
+    return node.getBoundingClientRect().height+parseFloat(style.marginTop)+parseFloat(style.marginBottom);
+  };
+  const height=Math.max(0,Math.min(parseFloat(getComputedStyle(stage).maxHeight),shelf.getBoundingClientRect().height-outerHeight(toolbar)-outerHeight(pagination)));
+  shelf.style.setProperty('--shelf-stage-height',height+'px');
+}
+const shelfObserver=new ResizeObserver(updateShelfHeight);
+[shelf,toolbar,pagination].forEach(node=>shelfObserver.observe(node));
 chatToggle.addEventListener('click',()=>{
+  if(chatPanel.hidden) updateShelfHeight();
   const open=chatPanel.hidden;chatPanel.hidden=!open;chatToggle.setAttribute('aria-expanded',String(open));
   if(open) {renderMessages();resizeInput();chatInput.focus();void loadSettings().catch(error=>notice(error.message));}
 });
