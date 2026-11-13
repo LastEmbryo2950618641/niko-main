@@ -2,7 +2,7 @@
 
 个人网站收藏首页，属于 `niko-archive` 组合站点。
 
-`index.html` 是独立静态页面，保留二次元背景、悬停文字主题、添加网站和自适应分页。轻小说书库默认排在第一张卡片，指向 `/nikowenku-archive/#/library`。
+`index.html` 是独立静态页面，保留二次元背景、悬停文字主题、添加网站和自适应分页。轻小说书库默认排在第一张卡片，指向 `/nikowenku-archive/#/library`；第二张是星海余页（StarseaFolio），指向 `/StarseaFolio/`，用于 AI 辅助小说创作。
 
 网站列表和主题选择存储在当前浏览器的 localStorage，不会修改仓库或同步给其他访客。直接打开 HTML 可以预览；书库链接需要通过主仓库的 Nginx 配置访问。背景插画目前沿用原 HTML 的远程图片地址。
 
