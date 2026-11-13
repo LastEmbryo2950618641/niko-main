@@ -25,6 +25,9 @@
     --accent-note:#92516F;
     --gap:14px;
     --radius:15px;
+    --card-size:clamp(112px,calc((100dvh - 148px) / 3),144px);
+    --grid-columns:2;
+    --shelf-gutter:64px;
   }
 
   *{box-sizing:border-box;}
@@ -103,7 +106,7 @@
   .palette__option:hover{transform:translateY(-2px);}
   .palette__option[aria-pressed="true"]{border-color:var(--swatch);}
   .palette__swatch{width:25px;height:25px;border-radius:8px;background:var(--swatch);box-shadow:0 2px 7px color-mix(in srgb,var(--swatch),transparent 48%);}
-  .shelf__stage{--grid-gap:clamp(6px,1.6vh,16px);position:relative;flex:1;min-height:0;height:100%;max-height:344px;}
+  .shelf__stage{--grid-gap:clamp(6px,1.6vh,16px);position:relative;flex:1;min-height:0;width:100%;height:100%;max-width:calc((var(--card-size) + var(--grid-gap)) * var(--grid-columns) + var(--shelf-gutter));max-height:calc(var(--card-size) * 3 + var(--grid-gap) * 2);margin-inline:auto;}
   /* Clip adjacent pages horizontally, while preserving raised cards and focus outlines. */
   .shelf__viewport{overflow-x:clip;overflow-y:visible;width:calc(100% - 64px);height:100%;margin-inline:auto;}
   .shelf__track{display:flex;align-items:stretch;height:100%;transition:transform .52s cubic-bezier(.22,.61,.36,1);will-change:transform;}
@@ -151,19 +154,20 @@
   .grid{
     list-style:none;margin:0;padding:0;height:100%;
     display:grid;
-    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-columns:repeat(var(--grid-columns),minmax(0,1fr));
     grid-template-rows:repeat(3,minmax(0,1fr));
     gap:var(--grid-gap);
   }
-  @media (max-width:359px){ .grid{grid-template-columns:1fr;} }
-  @media (min-width:720px){ .shelf__stage{--grid-gap:clamp(8px,1.6vh,14px);} .grid{grid-template-columns:repeat(3,minmax(0,1fr));} }
-  @media (min-width:1016px){ .shelf__stage{--grid-gap:16px;} .grid{grid-template-columns:repeat(4,minmax(0,1fr));} }
-  @media (min-width:1800px){ .grid{grid-template-columns:repeat(auto-fit,minmax(360px,1fr));} }
+  @media (max-width:359px){ :root{--grid-columns:1;} }
+  @media (min-width:720px){ :root{--grid-columns:3;} .shelf__stage{--grid-gap:clamp(8px,1.6vh,14px);} }
+  @media (min-width:1016px){ :root{--grid-columns:4;} .shelf__stage{--grid-gap:16px;} }
 
   .card{
     display:grid;
-    grid-template-columns:auto minmax(0,1fr);
-    align-items:center;
+    grid-template-columns:minmax(0,1fr);
+    align-content:center;
+    justify-items:center;
+    text-align:center;
     gap:clamp(6px,1.3vh,12px);
     height:100%;
     min-height:0;
@@ -230,7 +234,7 @@
   }
   .card__icon svg{width:19px;height:19px;display:block;fill:currentColor;}
 
-  .card__body{min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .card__body{min-width:0;width:100%;display:flex;flex-direction:column;gap:2px;}
   .card__name{
     font-size:clamp(10px,1.8vh,16px);
     font-weight:600;
@@ -261,14 +265,15 @@
     .card:hover .card__icon{transform:none;}
   }
 
-  /* ---------- 窄屏：图标移到上方，卡片变成紧凑小块 ---------- */
+  /* ---------- 窄屏：保留紧凑方形卡片，文字排列在图标下方 ---------- */
   @media (max-width:639px){
+    :root{--card-size:120px;--shelf-gutter:48px;}
     body{align-items:stretch;padding:8px 12px;}
     .shelf__viewport{width:calc(100% - 48px);}
     .toolbar{margin-bottom:8px;}
     .tool-button{width:36px;height:36px;}
     .card{
-      grid-template-columns:auto minmax(0,1fr);
+      grid-template-columns:minmax(0,1fr);
       align-items:center;
       gap:clamp(5px,1.3vh,9px);
       min-height:0;
@@ -282,10 +287,10 @@
     .card__note{margin-top:2px;font-size:clamp(8px,1.3vh,11px);}
   }
 
-  /* 极窄屏退为单列，图标回到左侧，避免右侧大片留白 */
+  /* 极窄屏退为单列，保留方形比例和可读的文字宽度 */
   @media (max-width:359px){
     .card{
-      grid-template-columns:auto minmax(0,1fr);
+      grid-template-columns:minmax(0,1fr);
       align-items:center;
       gap:12px;
       min-height:0;
@@ -316,7 +321,7 @@
   }
 </style>
 <link rel="stylesheet" href="/motion.css?v=4">
-<link rel="stylesheet" href="/ornaments.css?v=4">
+<link rel="stylesheet" href="/ornaments.css?v=5">
 </head>
 <body>
 
