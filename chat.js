@@ -1,10 +1,11 @@
-import {readSettings,saveProfile,deleteProfile,selectProfile,settingsKey} from './chat-settings.js?v=1';
+import {createBrowserSettings,settingsKey} from './browser-settings.js?v=1';
 import {createChatTransition,showDialog,hideDialog} from './ui-motion.js?v=1';
 const $=id=>document.getElementById(id);
 const chatPanel=$('chat-panel'),chatToggle=$('chat-toggle'),chatInput=$('chat-input'),messagesNode=$('chat-messages');
 const dialog=$('api-dialog'),profileSelect=$('api-profile'),keyInput=$('api-key');
+const settingsStore=createBrowserSettings();
 const initialProfile={id:'deepseek',name:'DeepSeek',provider:'deepseek',protocol:'openai',hasApiKey:false};
-let settings={activeProfileId:'deepseek',profiles:[initialProfile]},ready=false,loading,controller,preparing=false,frame,historyTimer;
+let settings={activeProfileId:'deepseek',profiles:[initialProfile]},ready=false,loading,settingsRevision=0,controller,preparing=false,frame,historyTimer;
 let conversation=[];
 try {
   const stored=JSON.parse(sessionStorage.getItem('site-shelf.chat.messages.v1')??'[]');
@@ -29,7 +30,10 @@ function updateSettings(next) {
 }
 async function loadSettings() {
   if(ready) return;
-  if(!loading) loading=Promise.resolve().then(()=>{updateSettings(readSettings(localStorage));ready=true;}).finally(()=>{loading=undefined;});
+  if(!loading) loading=(async()=>{
+    // Storage events may arrive while IndexedDB/decryption is pending. Read the latest write.
+    while(!ready){const revision=settingsRevision,next=await settingsStore.read();if(revision!==settingsRevision)continue;updateSettings(next);ready=true;}
+  })().finally(()=>{loading=undefined;});
   return loading;
 }
 function fillProfile(id) {
@@ -51,8 +55,9 @@ async function openSettings() {
   if(!dialog.open||dialog.hasAttribute('data-closing')) void showDialog(dialog);
   $('api-transport').hidden=location.protocol==='https:'||['localhost','127.0.0.1'].includes(location.hostname);
   $('api-save').disabled=true;apiStatus('读取中…');
+  $('api-reset').hidden=true;
   try {await loadSettings();fillProfile(settings.activeProfileId);$('api-save').disabled=false;}
-  catch(error) {apiStatus(error.message,true);}
+  catch(error) {apiStatus(error.message,true);$('api-reset').hidden=!window.isSecureContext;}
 }
 function closeSettings(){return hideDialog(dialog);}
 dialog.addEventListener('close',()=>{keyInput.value='';keyInput.type='password';$('api-status').textContent='';});
@@ -70,21 +75,26 @@ $('api-form').addEventListener('submit',async event=>{
   const body={provider:builtin?'deepseek':'custom',apiKey:keyInput.value};
   if(!builtin) Object.assign(body,{...(profileSelect.value==='__new'?{}:{id:profileSelect.value}),name:$('api-name').value,protocol:$('api-protocol').value,baseUrl:$('api-base').value,model:$('api-model').value});
   $('api-save').disabled=true;$('api-delete').disabled=true;apiStatus('保存中…');
-  try {updateSettings(saveProfile(localStorage,settings,body));fillProfile(settings.activeProfileId);await closeSettings();notice('已保存');chatInput.focus({preventScroll:true});}
+  try {updateSettings(await settingsStore.save(settings,body));fillProfile(settings.activeProfileId);await closeSettings();notice('已加密保存');chatInput.focus({preventScroll:true});}
   catch(error) {apiStatus(error.message,true);}
   finally {$('api-save').disabled=false;$('api-delete').disabled=false;}
 });
 $('api-delete').addEventListener('click',async()=>{
   $('api-delete').disabled=true;$('api-save').disabled=true;
-  try {updateSettings(deleteProfile(localStorage,settings,profileSelect.value));fillProfile(settings.activeProfileId);apiStatus('已清除');}
+  try {updateSettings(await settingsStore.delete(settings,profileSelect.value));fillProfile(settings.activeProfileId);apiStatus('已清除');}
   catch(error) {apiStatus(error.message,true);}
   finally {$('api-delete').disabled=false;$('api-save').disabled=false;}
 });
 $('chat-profile').addEventListener('change',async()=>{
   const select=$('chat-profile');select.disabled=true;
-  try {updateSettings(selectProfile(localStorage,settings,select.value));notice('已切换');}
+  try {updateSettings(await settingsStore.select(settings,select.value));notice('已切换');}
   catch(error) {select.value=settings.activeProfileId;notice(error.message);}
   finally {select.disabled=Boolean(controller);}
+});
+$('api-reset').addEventListener('click',async()=>{
+  if(!confirm('清除当前浏览器的全部 API 配置？'))return;
+  try{updateSettings(await settingsStore.clear());ready=true;fillProfile(settings.activeProfileId);$('api-reset').hidden=true;$('api-save').disabled=false;}
+  catch(error){apiStatus(error.message,true);}
 });
 
 function persistConversation() {
@@ -123,7 +133,7 @@ chatToggle.addEventListener('click',()=>{
   const finished=transitionChat(open);
   if(open){renderMessages();resizeInput();void loadSettings().catch(error=>notice(error.message));void finished.then(()=>{if(chatToggle.getAttribute('aria-expanded')==='true'&&!chatPanel.closest('.shelf').dataset.switching)chatInput.focus({preventScroll:true});});}
 });
-window.addEventListener('storage',event=>{if(event.key===settingsKey||event.key===null){ready=false;void loadSettings().then(()=>{if(controller)setRunning(true);}).catch(error=>notice(error.message));}});
+window.addEventListener('storage',event=>{if(event.key===settingsKey||event.key===null){settingsRevision++;ready=false;void loadSettings().then(()=>{if(controller)setRunning(true);}).catch(error=>notice(error.message));}});
 $('chat-new').addEventListener('click',()=>{if(controller) return;conversation=[];renderMessages();persistConversation();notice('Enter 发送 · Shift + Enter 换行');chatInput.focus();});
 $('chat-stop').addEventListener('click',()=>controller?.abort());
 

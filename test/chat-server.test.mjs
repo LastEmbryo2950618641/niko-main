@@ -26,7 +26,7 @@ async function withServer(run,transport){
  finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));await rm(directory,{recursive:true,force:true});}
 }
 
-test('browser storage retains, switches and removes profiles without sharing other browsers',()=>{
+test('configuration schema codec retains, switches and removes profiles in its memory adapter',()=>{
  const storage=memoryStorage();let state=readSettings(storage);assert.equal(state.profiles[0].hasApiKey,false);
  state=saveProfile(storage,state,{provider:'deepseek',apiKey:'local-test-key'});
  assert.equal(JSON.parse(storage.getItem(settingsKey)).profiles[0].apiKey,'local-test-key');
@@ -39,7 +39,7 @@ test('browser storage retains, switches and removes profiles without sharing oth
  state=deleteProfile(storage,state,'deepseek');assert.equal(state.profiles[0].hasApiKey,false);assert(!storage.getItem(settingsKey).includes('local-test-key'));
 });
 
-test('invalid or blocked browser storage fails clearly without losing the prior configuration',()=>{
+test('invalid profiles or a failed serialization adapter preserve the prior configuration',()=>{
  const storage=memoryStorage(),state=readSettings(storage);
  assert.throws(()=>saveProfile(storage,state,{provider:'deepseek',apiKey:'test\nheader'}),/无效字符/);
  assert.throws(()=>saveProfile({setItem(){throw new Error('QuotaExceeded');}},state,{provider:'deepseek',apiKey:'test'}),/无法保存/);

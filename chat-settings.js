@@ -1,3 +1,5 @@
+// Schema/serialization helpers. The browser uses these with an in-memory adapter;
+// persistent credentials must go through browser-settings.js, never plain localStorage.
 export const settingsKey='site-shelf.chat.settings.v1';
 export const deepseekProfile=Object.freeze({id:'deepseek',name:'DeepSeek',provider:'deepseek',protocol:'openai',baseUrl:'https://api.deepseek.com/v1',model:'deepseek-flash',apiKey:''});
 const initialSettings=()=>({activeProfileId:'deepseek',profiles:[{...deepseekProfile,hasApiKey:false}]});
