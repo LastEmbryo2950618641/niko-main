@@ -1,3 +1,4 @@
+import {readSettings,saveProfile,deleteProfile,selectProfile,settingsKey} from './chat-settings.js?v=1';
 const $=id=>document.getElementById(id);
 const chatPanel=$('chat-panel'),chatToggle=$('chat-toggle'),chatInput=$('chat-input'),messagesNode=$('chat-messages');
 const dialog=$('api-dialog'),profileSelect=$('api-profile'),keyInput=$('api-key');
@@ -27,7 +28,7 @@ function updateSettings(next) {
 }
 async function loadSettings() {
   if(ready) return;
-  if(!loading) loading=api('config').then(response=>response.json()).then(next=>{updateSettings(next);ready=true;}).finally(()=>{loading=undefined;});
+  if(!loading) loading=Promise.resolve().then(()=>{updateSettings(readSettings(localStorage));ready=true;}).finally(()=>{loading=undefined;});
   return loading;
 }
 function fillProfile(id) {
@@ -68,19 +69,19 @@ $('api-form').addEventListener('submit',async event=>{
   const body={provider:builtin?'deepseek':'custom',apiKey:keyInput.value};
   if(!builtin) Object.assign(body,{...(profileSelect.value==='__new'?{}:{id:profileSelect.value}),name:$('api-name').value,protocol:$('api-protocol').value,baseUrl:$('api-base').value,model:$('api-model').value});
   $('api-save').disabled=true;$('api-delete').disabled=true;apiStatus('正在保存…');
-  try {updateSettings(await (await api('config',{method:'PUT',body})).json());fillProfile(settings.activeProfileId);closeSettings();notice('配置已保存，可以开始对话。');chatInput.focus();}
+  try {updateSettings(saveProfile(localStorage,settings,body));fillProfile(settings.activeProfileId);closeSettings();notice('配置已保存在此浏览器，可以开始对话。');chatInput.focus();}
   catch(error) {apiStatus(error.message,true);}
   finally {$('api-save').disabled=false;$('api-delete').disabled=false;}
 });
 $('api-delete').addEventListener('click',async()=>{
   $('api-delete').disabled=true;$('api-save').disabled=true;
-  try {updateSettings(await (await api('config',{method:'DELETE',body:{id:profileSelect.value}})).json());fillProfile(settings.activeProfileId);apiStatus('已清除。');}
+  try {updateSettings(deleteProfile(localStorage,settings,profileSelect.value));fillProfile(settings.activeProfileId);apiStatus('已清除。');}
   catch(error) {apiStatus(error.message,true);}
   finally {$('api-delete').disabled=false;$('api-save').disabled=false;}
 });
 $('chat-profile').addEventListener('change',async()=>{
   const select=$('chat-profile');select.disabled=true;
-  try {updateSettings(await (await api('active',{method:'POST',body:{id:select.value}})).json());notice('已切换配置；后续消息使用新配置。');}
+  try {updateSettings(selectProfile(localStorage,settings,select.value));notice('已切换配置；后续消息使用新配置。');}
   catch(error) {select.value=settings.activeProfileId;notice(error.message);}
   finally {select.disabled=Boolean(controller);}
 });
@@ -115,25 +116,12 @@ function setRunning(running) {$('chat-send').hidden=running;$('chat-stop').hidde
 function resizeInput(){chatInput.style.height='auto';chatInput.style.height=Math.min(100,chatInput.scrollHeight)+'px';}
 chatInput.addEventListener('input',resizeInput);
 chatInput.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing&&!event.ctrlKey&&!event.metaKey){event.preventDefault();if(!controller) $('chat-form').requestSubmit();}});
-// Reserve the grid's collapsed height, including on short screens and after resizing.
-// Opening chat pushes the grid down; the page clips the overflow instead of shrinking cards.
-const shelf=chatPanel.closest('.shelf'),stage=$('shelf-stage'),toolbar=shelf.querySelector('.toolbar'),pagination=$('pagination');
-function updateShelfHeight(){
-  const outerHeight=node=>{
-    if(node.hidden) return 0;
-    const style=getComputedStyle(node);
-    return node.getBoundingClientRect().height+parseFloat(style.marginTop)+parseFloat(style.marginBottom);
-  };
-  const height=Math.max(0,Math.min(parseFloat(getComputedStyle(stage).maxHeight),shelf.getBoundingClientRect().height-outerHeight(toolbar)-outerHeight(pagination)));
-  shelf.style.setProperty('--shelf-stage-height',height+'px');
-}
-const shelfObserver=new ResizeObserver(updateShelfHeight);
-[shelf,toolbar,pagination].forEach(node=>shelfObserver.observe(node));
 chatToggle.addEventListener('click',()=>{
-  if(chatPanel.hidden) updateShelfHeight();
   const open=chatPanel.hidden;chatPanel.hidden=!open;chatToggle.setAttribute('aria-expanded',String(open));
   if(open) {renderMessages();resizeInput();chatInput.focus();void loadSettings().catch(error=>notice(error.message));}
+  else window.dispatchEvent(new Event('resize'));
 });
+window.addEventListener('storage',event=>{if(event.key===settingsKey||event.key===null){ready=false;void loadSettings().then(()=>{if(controller)setRunning(true);}).catch(error=>notice(error.message));}});
 $('chat-new').addEventListener('click',()=>{if(controller) return;conversation=[];renderMessages();persistConversation();notice('已开始新对话。');chatInput.focus();});
 $('chat-stop').addEventListener('click',()=>controller?.abort());
 
@@ -159,7 +147,8 @@ $('chat-form').addEventListener('submit',async event=>{
   const answer={role:'assistant',text:'',reasoning:'',status:'working',label:profile.name};conversation.push(answer);
   controller=new AbortController();setRunning(true);chatInput.value='';resizeInput();renderMessages();messagesNode.scrollTop=messagesNode.scrollHeight;persistConversation();notice('正在回复，可以随时停止；折叠面板不会中断对话。');
   try {
-    const response=await api('chat',{method:'POST',body:{profileId:profile.id,messages:history},signal:controller.signal});let done=false;
+    const {hasApiKey,...requestProfile}=profile;
+    const response=await api('chat',{method:'POST',body:{profile:requestProfile,messages:history},signal:controller.signal});let done=false;
     for await(const event of eventsFrom(response)) {
       if(event.type==='text') answer.text+=event.text;
       if(event.type==='reasoning') answer.reasoning+=event.text;

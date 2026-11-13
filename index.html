@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#26304A">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>网站收藏</title>
-<link rel="stylesheet" href="/chat.css?v=2">
+<link rel="stylesheet" href="/chat.css?v=3">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23262F45'/%3E%3Crect x='7' y='8' width='7' height='7' rx='2' fill='%23E7C58E'/%3E%3Crect x='18' y='8' width='7' height='7' rx='2' fill='%23A9B8DA'/%3E%3Crect x='7' y='18' width='7' height='7' rx='2' fill='%23A9B8DA'/%3E%3Crect x='18' y='18' width='7' height='7' rx='2' fill='%23E7C58E'/%3E%3C/svg%3E">
 <style>
   :root{
@@ -521,13 +521,13 @@
     </div>
     <p class="api-help" id="api-deepseek-help">已内置 DeepSeek 官方接口与模型，只需填写 API Key。<a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer">获取 Key</a></p>
     <div class="field"><label for="api-key">API Key</label><div class="api-key-field"><input id="api-key" type="password" maxlength="4096" placeholder="输入你的 API Key" autocomplete="off" spellcheck="false"><button class="chat-text-button" id="api-key-toggle" type="button" aria-label="显示 API Key">显示</button></div></div>
-    <p class="api-help">Key 按当前浏览器隔离，加密保存在此服务器；保存后不回显。对话记录仅保留在当前标签页，不会自动发送。</p>
+    <p class="api-help">API Key 与配置仅保存在当前浏览器的本地存储中；清除站点数据后需重新填写。发送消息时由服务端临时转发，服务端不保存或记录 Key。对话记录仅保留在当前标签页。</p>
     <p class="api-help api-transport" id="api-transport" hidden>当前是 HTTP 连接，传输未加密；使用真实 Key 前建议改用 HTTPS。</p>
     <p class="api-status" id="api-status" role="status"></p>
     <div class="api-footer"><button class="chat-text-button api-delete" id="api-delete" type="button">清除 Key</button><button class="form-cancel" id="api-cancel" type="button">取消</button><button class="form-submit" id="api-save" type="submit">保存并使用</button></div>
   </form>
 </dialog>
-<script type="module" src="/chat.js?v=2"></script>
+<script type="module" src="/chat.js?v=3"></script>
 <script>
   (() => {
     const grid = document.querySelector('#site-grid');
@@ -612,6 +612,7 @@
 
     const layout = (reset = false) => {
       if (reset) currentPage = 0;
+      if (!stage.getClientRects().length) return;
       const columns = getComputedStyle(grid).gridTemplateColumns.split(' ').length;
       pageSize = columns * 3;
       const items = [...track.querySelectorAll('.grid > li')];

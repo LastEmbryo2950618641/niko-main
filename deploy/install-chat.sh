@@ -10,10 +10,9 @@ test -f "$root/server/chat-server.mjs"
 "$node_bin" --check "$root/server/chat-server.mjs"
 case "$origin" in http://*|https://*) ;; *) echo 'Invalid public origin' >&2; exit 1;; esac
 case "$origin" in *' '*|*'"'*|*'%'*|*'$'*|*'`'*) echo 'Invalid public origin' >&2; exit 1;; esac
-install -d -o "$service_user" -g "$(id -gn "$service_user")" -m 700 /var/lib/niko-home-chat
 cat > /etc/systemd/system/niko-home-chat.service <<EOF
 [Unit]
-Description=Niko homepage private-key chat relay
+Description=Niko homepage stateless chat relay
 After=network-online.target
 Wants=network-online.target
 
@@ -21,7 +20,6 @@ Wants=network-online.target
 Type=simple
 User=$service_user
 WorkingDirectory=$root
-Environment=CHAT_STATE_DIR=/var/lib/niko-home-chat
 Environment=CHAT_PUBLIC_ORIGIN=$origin
 Environment=CHAT_PORT=4181
 ExecStart=$node_bin $root/server/chat-server.mjs
@@ -32,7 +30,6 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectHome=true
 ProtectSystem=strict
-ReadWritePaths=/var/lib/niko-home-chat
 MemoryMax=256M
 
 [Install]
@@ -47,6 +44,12 @@ for _ in $(seq 1 20); do
   sleep 0.3
 done
 test "$healthy" -eq 1
+# Remove only the obsolete homepage vault files after the stateless relay is healthy.
+# Never copy old user credentials into a deployment backup.
+if test -d /var/lib/niko-home-chat; then
+  find /var/lib/niko-home-chat -regextype posix-extended -maxdepth 1 -type f -regex '/var/lib/niko-home-chat/(master\.key|[0-9a-f]{64}\.vault(\.[0-9a-f]{12}\.tmp)?)' -delete
+  rmdir /var/lib/niko-home-chat 2>/dev/null || true
+fi
 nginx_conf=/etc/nginx/sites-available/worldseed
 backup="${nginx_conf}.before-home-chat-$(date -u +%Y%m%dT%H%M%SZ)"
 cp -a "$nginx_conf" "$backup"
