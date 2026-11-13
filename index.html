@@ -541,7 +541,7 @@
 <script type="module" src="/chat.js?v=13"></script>
 <script type="module">
   import {showDialog,hideDialog,setPopoverOpen} from './ui-motion.js?v=1';
-  import {createIcon,decorateCard} from './site-icons.js?v=3';
+  import {createIcon,decorateCard,cardCharms,randomCardCharm} from './site-icons.js?v=4';
   (() => {
     const grid = document.querySelector('#site-grid');
     grid.querySelectorAll('.card').forEach(decorateCard);
@@ -620,7 +620,7 @@
         body.append(note);
       }
       link.append(icon, body);
-      decorateCard(link,index);
+      decorateCard(link,index,site.charm);
       item.append(link);
       track.lastElementChild.querySelector('.grid').append(item);
     };
@@ -679,12 +679,17 @@
 
     try {
       const savedSites = JSON.parse(storageGet(storage.sites) || '[]');
+      let assignedCharms = false;
       if (Array.isArray(savedSites)) savedSites.forEach((site, index) => {
         try {
           const url = new URL(site.url);
-          if (['http:', 'https:'].includes(url.protocol) && site.name) addCard({name:String(site.name),url:url.href,note:String(site.note || '')}, grid.children.length);
+          if (['http:', 'https:'].includes(url.protocol) && site.name) {
+            if (!cardCharms.includes(site.charm)) { site.charm = randomCardCharm(); assignedCharms = true; }
+            addCard({name:String(site.name),url:url.href,note:String(site.note || ''),charm:site.charm}, grid.children.length);
+          }
         } catch {}
       });
+      if (assignedCharms) storageSet(storage.sites, JSON.stringify(savedSites));
       setTheme(storageGet(storage.theme) || 'pink', false);
     } catch { setTheme('pink', false); }
 
@@ -723,7 +728,7 @@
       let url;
       try { url = new URL(inputUrl); } catch { error.textContent = '请输入有效的网站地址'; return; }
       if (!['http:', 'https:'].includes(url.protocol)) { error.textContent = '网站地址需要以 http:// 或 https:// 开头'; return; }
-      const site = {name,url:url.href,note};
+      const site = {name,url:url.href,note,charm:randomCardCharm()};
       const customSites = JSON.parse(storageGet(storage.sites) || '[]');
       customSites.push(site);
       storageSet(storage.sites, JSON.stringify(customSites));
