@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#26304A">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>网站收藏</title>
-<link rel="stylesheet" href="/chat.css?v=3">
+<link rel="stylesheet" href="/chat.css?v=4">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23262F45'/%3E%3Crect x='7' y='8' width='7' height='7' rx='2' fill='%23E7C58E'/%3E%3Crect x='18' y='8' width='7' height='7' rx='2' fill='%23A9B8DA'/%3E%3Crect x='7' y='18' width='7' height='7' rx='2' fill='%23A9B8DA'/%3E%3Crect x='18' y='18' width='7' height='7' rx='2' fill='%23E7C58E'/%3E%3C/svg%3E">
 <style>
   :root{
@@ -315,6 +315,7 @@
     .shelf__track.is-sliding{animation:none;}
   }
 </style>
+<link rel="stylesheet" href="/motion.css?v=1">
 </head>
 <body>
 
@@ -527,8 +528,9 @@
     <div class="api-footer"><button class="chat-text-button api-delete" id="api-delete" type="button">清除 Key</button><button class="form-cancel" id="api-cancel" type="button">取消</button><button class="form-submit" id="api-save" type="submit">保存并使用</button></div>
   </form>
 </dialog>
-<script type="module" src="/chat.js?v=3"></script>
-<script>
+<script type="module" src="/chat.js?v=4"></script>
+<script type="module">
+  import {showDialog,hideDialog,setPopoverOpen} from './ui-motion.js?v=1';
   (() => {
     const grid = document.querySelector('#site-grid');
     const stage = document.querySelector('#shelf-stage');
@@ -674,29 +676,29 @@
     } catch { setTheme('pink', false); }
 
     themeToggle.addEventListener('click', () => {
-      const open = palette.hidden;
-      palette.hidden = !open;
+      const open = palette.dataset.expanded !== 'true';
+      setPopoverOpen(palette, open);
       themeToggle.setAttribute('aria-expanded', String(open));
     });
     palette.addEventListener('click', event => {
       const option = event.target.closest('[data-theme]');
       if (!option) return;
       setTheme(option.dataset.theme);
-      palette.hidden = true;
+      setPopoverOpen(palette, false);
       themeToggle.setAttribute('aria-expanded', 'false');
     });
     document.addEventListener('click', event => {
       if (!event.target.closest('.tool-wrap')) {
-        palette.hidden = true;
+        setPopoverOpen(palette, false);
         themeToggle.setAttribute('aria-expanded', 'false');
       }
     });
     document.querySelector('#add-site').addEventListener('click', () => {
       error.textContent = '';
-      dialog.showModal();
+      void showDialog(dialog);
       document.querySelector('#site-name').focus();
     });
-    const closeDialog = () => dialog.close();
+    const closeDialog = () => { void hideDialog(dialog); };
     document.querySelector('#dialog-close').addEventListener('click', closeDialog);
     document.querySelector('#form-cancel').addEventListener('click', closeDialog);
     form.addEventListener('submit', event => {
@@ -738,6 +740,7 @@
       }
     }, {passive:false});
     window.addEventListener('resize', () => layout());
+    window.addEventListener('shelf:layout', () => layout());
     layout();
   })();
 </script>

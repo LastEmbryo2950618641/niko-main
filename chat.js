@@ -1,4 +1,5 @@
 import {readSettings,saveProfile,deleteProfile,selectProfile,settingsKey} from './chat-settings.js?v=1';
+import {createChatTransition,showDialog,hideDialog} from './ui-motion.js?v=1';
 const $=id=>document.getElementById(id);
 const chatPanel=$('chat-panel'),chatToggle=$('chat-toggle'),chatInput=$('chat-input'),messagesNode=$('chat-messages');
 const dialog=$('api-dialog'),profileSelect=$('api-profile'),keyInput=$('api-key');
@@ -47,13 +48,13 @@ function fillProfile(id) {
   $('api-delete').textContent=id==='deepseek'?'清除 Key':'删除配置';apiStatus('');
 }
 async function openSettings() {
-  if(!dialog.open) dialog.showModal();
+  if(!dialog.open||dialog.hasAttribute('data-closing')) void showDialog(dialog);
   $('api-transport').hidden=location.protocol==='https:'||['localhost','127.0.0.1'].includes(location.hostname);
   $('api-save').disabled=true;apiStatus('正在读取配置…');
   try {await loadSettings();fillProfile(settings.activeProfileId);$('api-save').disabled=false;}
   catch(error) {apiStatus(error.message,true);}
 }
-function closeSettings(){dialog.close();}
+function closeSettings(){return hideDialog(dialog);}
 dialog.addEventListener('close',()=>{keyInput.value='';keyInput.type='password';$('api-status').textContent='';});
 $('api-settings-open').addEventListener('click',()=>void openSettings());
 for(const id of ['api-close','api-cancel']) $(id).addEventListener('click',closeSettings);
@@ -69,7 +70,7 @@ $('api-form').addEventListener('submit',async event=>{
   const body={provider:builtin?'deepseek':'custom',apiKey:keyInput.value};
   if(!builtin) Object.assign(body,{...(profileSelect.value==='__new'?{}:{id:profileSelect.value}),name:$('api-name').value,protocol:$('api-protocol').value,baseUrl:$('api-base').value,model:$('api-model').value});
   $('api-save').disabled=true;$('api-delete').disabled=true;apiStatus('正在保存…');
-  try {updateSettings(saveProfile(localStorage,settings,body));fillProfile(settings.activeProfileId);closeSettings();notice('配置已保存在此浏览器，可以开始对话。');chatInput.focus();}
+  try {updateSettings(saveProfile(localStorage,settings,body));fillProfile(settings.activeProfileId);await closeSettings();notice('配置已保存在此浏览器，可以开始对话。');chatInput.focus({preventScroll:true});}
   catch(error) {apiStatus(error.message,true);}
   finally {$('api-save').disabled=false;$('api-delete').disabled=false;}
 });
@@ -116,10 +117,11 @@ function setRunning(running) {$('chat-send').hidden=running;$('chat-stop').hidde
 function resizeInput(){chatInput.style.height='auto';chatInput.style.height=Math.min(100,chatInput.scrollHeight)+'px';}
 chatInput.addEventListener('input',resizeInput);
 chatInput.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing&&!event.ctrlKey&&!event.metaKey){event.preventDefault();if(!controller) $('chat-form').requestSubmit();}});
+const transitionChat=createChatTransition(chatPanel,chatToggle);
 chatToggle.addEventListener('click',()=>{
-  const open=chatPanel.hidden;chatPanel.hidden=!open;chatToggle.setAttribute('aria-expanded',String(open));
-  if(open) {renderMessages();resizeInput();chatInput.focus();void loadSettings().catch(error=>notice(error.message));}
-  else window.dispatchEvent(new Event('resize'));
+  const open=chatToggle.getAttribute('aria-expanded')!=='true';
+  const finished=transitionChat(open);
+  if(open){renderMessages();resizeInput();void loadSettings().catch(error=>notice(error.message));void finished.then(()=>{if(chatToggle.getAttribute('aria-expanded')==='true'&&!chatPanel.closest('.shelf').dataset.switching)chatInput.focus({preventScroll:true});});}
 });
 window.addEventListener('storage',event=>{if(event.key===settingsKey||event.key===null){ready=false;void loadSettings().then(()=>{if(controller)setRunning(true);}).catch(error=>notice(error.message));}});
 $('chat-new').addEventListener('click',()=>{if(controller) return;conversation=[];renderMessages();persistConversation();notice('已开始新对话。');chatInput.focus();});

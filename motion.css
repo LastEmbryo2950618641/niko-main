@@ -1,0 +1,34 @@
+:root{--motion-ease:cubic-bezier(.22,.61,.36,1);--motion-fast:180ms;}
+.toolbar{position:relative;z-index:4;}
+.chat-panel{position:relative;z-index:2;}
+.shelf.is-chat-open{justify-content:flex-start;}
+.shelf.is-chat-open .shelf__stage,.shelf.is-chat-open .pagination{display:none;}
+.shelf[data-switching] .shelf__stage,.shelf[data-switching] .chat-panel{will-change:transform,opacity;}
+/* The entry animation must release transform so hover and press can take over. */
+.card{animation-fill-mode:backwards;}
+.card__name,.card__domain,.card__note{transition:color 240ms ease;}
+.tool-button,.palette__option,.page-arrow,.dialog-close,.form-actions button,.api-footer button,.chat-text-button,.chat-send{
+  transition:transform var(--motion-fast) var(--motion-ease),background-color var(--motion-fast) ease,color var(--motion-fast) ease,border-color var(--motion-fast) ease,box-shadow var(--motion-fast) ease,opacity var(--motion-fast) ease;
+}
+.field input,.api-form select,.chat-profile select,.chat-compose textarea{
+  transition:border-color var(--motion-fast) ease,background-color var(--motion-fast) ease,box-shadow var(--motion-fast) ease,color var(--motion-fast) ease;
+}
+.field input:focus,.api-form select:focus,.chat-profile select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.add-dialog[open]::backdrop{animation:backdrop-in 240ms ease both;}
+.add-dialog[data-closing]::backdrop{animation:backdrop-out 180ms ease both;}
+@keyframes backdrop-in{from{opacity:0;}to{opacity:1;}}
+@keyframes backdrop-out{from{opacity:1;}to{opacity:0;}}
+@keyframes content-reveal{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+#api-custom-fields:not([hidden]),.chat-message__reasoning[open] p{animation:content-reveal 220ms var(--motion-ease) both;}
+@media(hover:hover){
+  .chat-text-button:not(:disabled):hover,.dialog-close:hover{transform:translateY(-1px);}
+  .chat-send:not(:disabled):hover,.form-actions button:hover,.api-footer button:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 14px -8px var(--accent-dark);}
+  .tool-button:hover{box-shadow:0 11px 22px -12px rgba(10,16,32,.5);}
+  .api-form select:hover,.chat-profile select:hover,.field input:hover{border-color:var(--accent-edge);}
+}
+.tool-button:active,.palette__option:active,.dialog-close:active,.form-actions button:active,.api-footer button:not(:disabled):active,.chat-text-button:not(:disabled):active,.chat-send:not(:disabled):active{transform:translateY(0) scale(.96);}
+@media(prefers-reduced-motion:reduce){
+  .card,.card__icon,.card__name,.card__domain,.card__note,.tool-button,.palette__option,.page-arrow,.dialog-close,.form-actions button,.api-footer button,.chat-text-button,.chat-send,.field input,.api-form select,.chat-profile select,.chat-compose textarea{transition:none!important;}
+  .add-dialog::backdrop,#api-custom-fields,.chat-message__reasoning[open] p{animation:none!important;}
+  .tool-button:hover,.tool-button:active,.palette__option:active,.dialog-close:hover,.dialog-close:active,.form-actions button:hover,.form-actions button:active,.api-footer button:hover,.api-footer button:active,.chat-text-button:hover,.chat-text-button:active,.chat-send:hover,.chat-send:active{transform:none!important;}
+}
