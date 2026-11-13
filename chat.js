@@ -1,6 +1,6 @@
 import {createBrowserSettings,settingsKey} from './browser-settings.js?v=1';
 import {createChatTransition,showDialog,hideDialog} from './ui-motion.js?v=1';
-import {enhanceSelects} from './select-menu.js?v=1';
+import {enhanceSelects} from './select-menu.js?v=2';
 const $=id=>document.getElementById(id);
 const chatPanel=$('chat-panel'),chatToggle=$('chat-toggle'),chatInput=$('chat-input'),messagesNode=$('chat-messages');
 const dialog=$('api-dialog'),profileSelect=$('api-profile'),keyInput=$('api-key');

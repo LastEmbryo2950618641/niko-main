@@ -35,10 +35,18 @@ export function enhanceSelects(selects) {
     }
     function setActive(index) {
       active=index;items.forEach((item,i)=>item.node.classList.toggle('is-active',i===index));
-      if(expanded&&items[index]){trigger.setAttribute('aria-activedescendant',items[index].node.id);items[index].node.scrollIntoView({block:'nearest'});}
+      if(expanded&&items[index]){
+        trigger.setAttribute('aria-activedescendant',items[index].node.id);
+        // Scroll only the options, so keyboard navigation cannot scroll and close the dialog menu.
+        const row=items[index].node.getBoundingClientRect(),bounds=menu.getBoundingClientRect(),top=bounds.top+menu.clientTop,bottom=top+menu.clientHeight;
+        if(row.top<top)menu.scrollTop+=row.top-top;
+        else if(row.bottom>bottom)menu.scrollTop+=row.bottom-bottom;
+      }
     }
     function position() {
       const rect=trigger.getBoundingClientRect(),viewport=window.visualViewport,left=viewport?.offsetLeft??0,top=viewport?.offsetTop??0,width=viewport?.width??innerWidth,height=viewport?.height??innerHeight;
+      const dialogBounds=select.closest('dialog')?.getBoundingClientRect();
+      if(rect.bottom<=Math.max(top,dialogBounds?.top??top)||rect.top>=Math.min(top+height,dialogBounds?.bottom??top+height)){close({immediate:true});return;}
       const below=top+height-rect.bottom-12,above=rect.top-top-12,up=below<Math.min(menu.scrollHeight,180)&&above>below;
       const menuWidth=Math.min(Math.max(rect.width,180),width-20),limit=Math.max(40,Math.min(280,up?above:below));
       menu.dataset.side=up?'above':'below';menu.style.width=menuWidth+'px';menu.style.maxHeight=limit+'px';
@@ -90,7 +98,7 @@ export function enhanceSelects(selects) {
     });
     select.addEventListener('change',refresh);
     new MutationObserver(refresh).observe(select,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['disabled','selected','label']});
-    const controller={root,trigger,menu,refresh,close};menus.push(controller);refresh();
+    const controller={root,trigger,menu,refresh,close,reposition:position};menus.push(controller);refresh();
     select.closest('dialog')?.addEventListener('close',()=>close({immediate:true}));
   }
   const containsTarget=target=>current&&(current.root.contains(target)||current.menu.contains(target));
@@ -98,7 +106,7 @@ export function enhanceSelects(selects) {
   document.addEventListener('focusin',event=>{if(current&&!containsTarget(event.target))current.close();});
   const closeAll=()=>menus.forEach(menu=>menu.close({immediate:true}));
   window.addEventListener('resize',closeAll);window.visualViewport?.addEventListener('resize',closeAll);
-  document.addEventListener('scroll',event=>{if(current&&!current.menu.contains(event.target))current.close({immediate:true});},true);
+  document.addEventListener('scroll',event=>{if(current&&!current.menu.contains(event.target))current.reposition();},true);
   reduced.addEventListener('change',closeAll);
   return {refresh:()=>menus.forEach(menu=>menu.refresh()),close:closeAll};
 }
