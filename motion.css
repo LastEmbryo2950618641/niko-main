@@ -27,18 +27,22 @@
   .api-form select:hover,.chat-profile select:hover,.field input:hover{border-color:var(--accent-edge);}
 }
 .tool-button:active,.palette__option:active,.dialog-close:active,.form-actions button:active,.api-footer button:not(:disabled):active,.chat-text-button:not(:disabled):active,.chat-send:not(:disabled):active{transform:translateY(0) scale(.96);}
-/* Ambient motion stays on decorative layers, leaving card text and hit targets still. */
-@keyframes idle-scene{0%,100%{transform:scale(1) translate(0,0);}50%{transform:scale(1.035) translate(-.4%,-.2%);}}
-@keyframes idle-charm{0%,100%{transform:translateY(0) rotate(-6deg);}50%{transform:translateY(-3px) rotate(7deg);}}
+/* Individual translate composes with the existing hover transform instead of replacing it. */
+@keyframes idle-scene{0%,100%{transform:scale(1) translate(0,0);}50%{transform:scale(1.045) translate(-.5%,-.3%);}}
+@keyframes idle-card{0%,100%{translate:0 0;}50%{translate:0 -5px;}}
+@keyframes idle-charm{0%,100%{transform:translateY(0) rotate(-10deg);}50%{transform:translateY(-4px) rotate(12deg);}}
 @keyframes idle-paw{0%,55%,100%{opacity:.28;}15%,30%{opacity:.9;}}
 @media(prefers-reduced-motion:no-preference){
-  .scene__img{animation:drift 2.4s cubic-bezier(.22,.61,.36,1) both,idle-scene 36s ease-in-out 2.4s infinite;}
-  .card__charm>.site-icon{transform-origin:50% 70%;animation:idle-charm 7.8s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.61s);}
+  .scene__img{animation:drift 2.4s cubic-bezier(.22,.61,.36,1) both,idle-scene 18s ease-in-out 2.4s infinite;}
+  .card{animation:rise .68s cubic-bezier(.22,.61,.36,1) backwards,idle-card 5.6s ease-in-out infinite;animation-delay:calc(var(--i,0) * 42ms),calc(var(--i,0) * -.47s);}
+  .card__charm>.site-icon{transform-origin:50% 70%;animation:idle-charm 5.2s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.61s);}
   .shelf__paw-trail>.site-icon{animation:idle-paw 5.8s ease-in-out infinite;}
   .shelf__paw-trail>.site-icon:nth-child(2){animation-delay:.55s;}
   .shelf__paw-trail>.site-icon:nth-child(3){animation-delay:1.1s;}
   .card:is(:hover,:focus-visible) .card__charm>.site-icon,.shelf__page[aria-hidden="true"] .card__charm>.site-icon{animation-play-state:paused;}
-  :root[data-motion-paused] :is(.scene__img,.card__charm>.site-icon,.shelf__paw-trail>.site-icon),body:has(.add-dialog[open]) :is(.scene__img,.card__charm>.site-icon,.shelf__paw-trail>.site-icon){animation-play-state:paused;}
+  .card:is(:hover,:focus-visible){animation-play-state:running,paused;}
+  .shelf__page[aria-hidden="true"] .card{animation-play-state:paused;}
+  :root[data-motion-paused] :is(.scene__img,.card,.card__charm>.site-icon,.shelf__paw-trail>.site-icon),body:has(.add-dialog[open]) :is(.scene__img,.card,.card__charm>.site-icon,.shelf__paw-trail>.site-icon){animation-play-state:paused;}
   body:has(.shelf.is-chat-open) .scene__img{animation-play-state:paused;}
 }
 @media(prefers-reduced-motion:reduce){
