@@ -1,8 +1,8 @@
 import {createBrowserSettings,settingsKey} from './browser-settings.js?v=1';
 import {createChatTransition,showDialog,hideDialog} from './ui-motion.js?v=1';
-import {enhanceSelects} from './select-menu.js?v=4';
+import {enhanceSelects} from './select-menu.js?v=5';
 import {createConversationArchive,conversationTitle} from './chat-conversations.js?v=1';
-import {createIcon,setIconLabel} from './site-icons.js?v=2';
+import {createIcon,setIconLabel} from './site-icons.js?v=3';
 const $=id=>document.getElementById(id);
 const chatPanel=$('chat-panel'),chatToggle=$('chat-toggle'),chatInput=$('chat-input'),messagesNode=$('chat-messages');
 const dialog=$('api-dialog'),profileSelect=$('api-profile'),keyInput=$('api-key');
@@ -145,7 +145,7 @@ function renderMessages() {
     const empty=element('div','chat-empty'),crest=element('div','chat-empty__crest');crest.setAttribute('aria-hidden','true');
     crest.append(createIcon('cat','chat-empty__cat'));empty.append(crest,element('strong',null,'想聊点什么？'));
     if(!settings.profiles.some(p=>p.hasApiKey)) {const button=element('button','chat-text-button');setIconLabel(button,'配置 API Key','key');button.type='button';button.addEventListener('click',()=>void openSettings());empty.append(button);}
-    const accessories=element('div','chat-empty__accessories');accessories.setAttribute('aria-hidden','true');accessories.append(createIcon('paw-print-solid'),createIcon('dress-solid'),createIcon('heart-solid'));empty.append(accessories);
+    const accessories=element('div','chat-empty__accessories');accessories.setAttribute('aria-hidden','true');accessories.append(createIcon('paw-print'),createIcon('dress'),createIcon('heart'));empty.append(accessories);
     messagesNode.replaceChildren(empty);return;
   }
   const fragment=document.createDocumentFragment();
